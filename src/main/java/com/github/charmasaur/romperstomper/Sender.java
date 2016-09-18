@@ -27,6 +27,7 @@ public class Sender {
   private static final String PREFS_KEY_TOKEN = "TOKEN";
 
   public interface Callback {
+    // TODO: Should probably have onError as well.
     void onResults(List<String> data);
     void onStatus(String status);
   }
