@@ -117,6 +117,13 @@ class Here(webapp2.RequestHandler):
             self.response.write(lift.key.id() + ": " + str(lift.last_wait / 60) + " min " + str(lift.last_wait % 60) + " sec" + ago_string + delimiter)
 
 
+class Add(webapp2.RequestHandler):
+
+    def get(self):
+        self.response.write("Sorry, not yet implemented.")
+
+
 app = webapp2.WSGIApplication([
     ('/here', Here),
+    ('/add', Add),
 ], debug=True)
