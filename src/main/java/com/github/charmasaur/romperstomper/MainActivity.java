@@ -7,10 +7,10 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
@@ -25,6 +25,7 @@ public class MainActivity extends Activity {
 
   private TextView text;
   private TextView lastUpdatedText;
+  private SwipeRefreshLayout swipeRefreshLayout;
 
   private LocationRequester requester;
   private Sender sender;
@@ -43,6 +44,7 @@ public class MainActivity extends Activity {
     text = (TextView) findViewById(R.id.text);
     lastUpdatedText = (TextView) findViewById(R.id.last_updated);
     ((ListView) findViewById(R.id.list)).setAdapter(adapter);
+    swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
 
     requester = new LocationRequester(this, requesterCallback);
     sender = new Sender(this, senderCallback);
@@ -62,6 +64,14 @@ public class MainActivity extends Activity {
     findViewById(R.id.update_button).setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
+        text.setText("Refreshing");
+        sender.update();
+      }
+    });
+
+    swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+      @Override
+      public void onRefresh() {
         text.setText("Refreshing");
         sender.update();
       }
@@ -112,6 +122,7 @@ public class MainActivity extends Activity {
     @Override
     public void onStatus(String status) {
       text.setText(status);
+      swipeRefreshLayout.setRefreshing(false);
     }
   };
 
