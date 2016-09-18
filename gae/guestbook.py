@@ -1,20 +1,5 @@
 #!/usr/bin/env python
-# TOM IS TOM
-# Copyright 2016 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
-# [START imports]
 import os
 import urllib
 
@@ -25,7 +10,6 @@ import time
 import math
 import jinja2
 import webapp2
-# [END imports]
 
 lifts = [
     ("Blue Calf", -36.3845236, 148.3715626),
@@ -82,7 +66,6 @@ def update_lift(name, wait, update_time):
     lift.last_update = update_time
     lift.put()
 
-# [START guestbook]
 class Here(webapp2.RequestHandler):
 
     def get(self):
@@ -132,11 +115,8 @@ class Here(webapp2.RequestHandler):
             else:
                 ago_string = ""
             self.response.write(lift.key.id() + ": " + str(lift.last_wait / 60) + " min " + str(lift.last_wait % 60) + " sec" + ago_string + delimiter)
-# [END guestbook]
 
 
-# [START app]
 app = webapp2.WSGIApplication([
     ('/here', Here),
 ], debug=True)
-# [END app]
