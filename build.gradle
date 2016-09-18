@@ -8,6 +8,12 @@ buildscript {
   }
 }
 
+subprojects {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
+}
+
 apply plugin: 'com.android.application'
 
 ext.rootAppId = "com.github.charmasaur.romperstomper"
