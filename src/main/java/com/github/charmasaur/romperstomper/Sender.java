@@ -1,6 +1,7 @@
 package com.github.charmasaur.romperstomper;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Base64;
@@ -19,6 +20,8 @@ import java.util.List;
 public class Sender {
   private static final String TAG = Sender.class.getSimpleName();
   private static final String URL = "http://romper-stomper.appspot.com/here";
+  private static final String PREFS_NAME = "SENDER";
+  private static final String PREFS_KEY_TOKEN = "TOKEN";
 
   public interface Callback {
     void onResults(List<String> data);
@@ -33,11 +36,15 @@ public class Sender {
     this.callback = callback;
 
     queue = Volley.newRequestQueue(context);
-    byte[] randomBytes = new byte[10];
-    new SecureRandom().nextBytes(randomBytes);
-    token = Base64.encodeToString(randomBytes, Base64.URL_SAFE);
-    Log.i(TAG, "Made token: " + token);
-    // TODO: Save to shared prefs so we have a persistent token
+
+    SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
+    String storedToken = prefs.getString(PREFS_KEY_TOKEN, null);
+    if (storedToken != null) {
+      token = storedToken;
+    } else {
+      token = generateToken();
+      prefs.edit().putString(PREFS_KEY_TOKEN, token).apply();
+    }
   }
 
   public void send(double lat, double lng, double acc, long time) {
@@ -77,5 +84,12 @@ public class Sender {
 
   private void parseResponse(String r) {
     callback.onResults(Arrays.asList(r.split("\\|")));
+  }
+
+  private static String generateToken() {
+    byte[] randomBytes = new byte[10];
+    new SecureRandom().nextBytes(randomBytes);
+    // Use NO_WRAP since otherwise this won't get saved correctly to shared preferences.
+    return Base64.encodeToString(randomBytes, Base64.URL_SAFE | Base64.NO_WRAP);
   }
 }
