@@ -2,6 +2,7 @@ package com.github.charmasaur.romperstomper;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Base64;
@@ -19,7 +20,9 @@ import java.util.List;
 
 public class Sender {
   private static final String TAG = Sender.class.getSimpleName();
-  private static final String URL = "http://romper-stomper.appspot.com/here";
+  private static final String SCHEME = "http";
+  private static final String AUTHORITY = "romper-stomper.appspot.com";
+  private static final String PATH = "here";
   private static final String PREFS_NAME = "SENDER";
   private static final String PREFS_KEY_TOKEN = "TOKEN";
 
@@ -56,13 +59,20 @@ public class Sender {
   }
 
   private void sendIt(double lat, double lng, double acc, long time, boolean just_request) {
-    // Request a string response from the provided URL.
-    String url = URL + "?" +
-        (just_request
-            ? ""
-            : ("lat=" + lat + "&lng=" + lng + "&acc=" + acc + "&tim=" + time))
-        + "&token=" + token;
-    StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+    Uri.Builder uriBuilder = new Uri.Builder()
+        .scheme(SCHEME)
+        .authority(AUTHORITY)
+        .path(PATH)
+        .appendQueryParameter("token", token);
+    if (!just_request) {
+      uriBuilder.appendQueryParameter("lat", Double.toString(lat))
+          .appendQueryParameter("lng", Double.toString(lng))
+          .appendQueryParameter("acc", Double.toString(acc))
+          .appendQueryParameter("tim", Long.toString(time));
+    }
+    StringRequest stringRequest = new StringRequest(
+        Request.Method.GET,
+        uriBuilder.build().toString(),
         new Response.Listener<String>() {
           @Override
           public void onResponse(String response) {
