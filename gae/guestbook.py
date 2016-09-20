@@ -11,6 +11,11 @@ import math
 import jinja2
 import webapp2
 
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
+
 lifts = [
     ("Blue Calf", -36.3845236, 148.3715626),
     ("Blue Cow", -36.382989, 148.379258),
@@ -118,12 +123,32 @@ class Here(webapp2.RequestHandler):
 
 
 class Add(webapp2.RequestHandler):
-
     def get(self):
-        self.response.write("Sorry, not yet implemented.")
+        template = JINJA_ENVIRONMENT.get_template('add.html')
+
+        f = open('api_key.txt', 'r')
+        api_key = f.read()
+        self.response.write(template.render({'API_KEY' : api_key}))
+
+
+class AddInternal(webapp2.RequestHandler):
+    def get(self):
+        name = self.request.get('name', '')
+        try:
+            lat = float(self.request.get('lat', '0.0'))
+            lng = float(self.request.get('lng', '0.0'))
+        except ValueError:
+            self.response.write("No")
+            return
+
+        if name == '' or lat == 0.0 or lng == 0.0:
+            self.response.write("No")
+
+        self.response.write("Pretending to add " + name + " at (" + str(lat) + "," + str(lng) + ")")
 
 
 app = webapp2.WSGIApplication([
     ('/here', Here),
     ('/add', Add),
+    ('/add_internal', AddInternal),
 ], debug=True)
