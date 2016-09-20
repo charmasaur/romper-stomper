@@ -48,6 +48,8 @@ class Fellow(ndb.Model):
 class Lift(ndb.Model):
     last_wait = ndb.IntegerProperty(indexed=False)
     last_update = ndb.IntegerProperty(indexed=False)
+    # TODO: Should this be indexed?
+    location = ndb.GeoPtProperty(indexed=False)
 
 
 def get_distance(lat1, lng1, lat2, lng2):
@@ -58,6 +60,9 @@ def is_distance_within(lat1, lng1, lat2, lng2):
     return get_distance(lat1, lng1, lat2, lng2) < distance_threshold
 
 def get_nearest(lat, lng, acc):
+    # TODO: Make this query the lifts in the db rather than look through the hardcoded list. Even
+    # better would be if we could somehow query for the nearest...
+    # https://pypi.python.org/pypi/geomodel/0.1.0 might be worth a look.
     for (name, llat, llng) in lifts:
         if is_distance_within(lat, lng, llat, llng):
             return name
@@ -70,6 +75,16 @@ def update_lift(name, wait, update_time):
     lift.last_wait = wait
     lift.last_update = update_time
     lift.put()
+
+def maybe_create_lift(name, lat, lng):
+    if ndb.Key(Lift, name).get():
+        return False
+    # TODO: See if there are any lifts with the same location too.
+
+    lift = Lift(id=name, location=ndb.GeoPt(lat=lat,lon=lng))
+    lift.put()
+    return True
+
 
 class Here(webapp2.RequestHandler):
 
@@ -115,6 +130,10 @@ class Here(webapp2.RequestHandler):
         if nearest:
             self.response.write("You are at: " + nearest + "|")
         for lift in lifters:
+            # TODO: Make better.
+            if not lift.last_wait:
+                self.response.write(lift.key.id() + ": " + "no data yet" + delimiter)
+                continue
             if lift.last_update:
                 ago_string = " (" + str(((int) (time.time()) - lift.last_update) / 60) + " min ago)"
             else:
@@ -144,7 +163,10 @@ class AddInternal(webapp2.RequestHandler):
         if name == '' or lat == 0.0 or lng == 0.0:
             self.response.write("No")
 
-        self.response.write("Pretending to add " + name + " at (" + str(lat) + "," + str(lng) + ")")
+        if maybe_create_lift(name, lat, lng):
+            self.response.write("Added")
+        else:
+            self.response.write("Already added")
 
 
 app = webapp2.WSGIApplication([
