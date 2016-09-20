@@ -96,7 +96,7 @@ public class LocationRequester {
 
       @Override
       public void onConnectionSuspended(int cause) {
-        Log.i(TAG, "COnnection suspended: " + cause);
+        Log.i(TAG, "Connection suspended: " + cause);
       }
     };
 
