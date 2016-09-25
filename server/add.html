@@ -13,8 +13,8 @@
   <body>
     <form action="/add_internal" method="get">
       <div>Name: <input type="text" name="name"></div>
-      <div>Latitude: <input type="number" name="lat" step="any"></div>
-      <div>Longitude: <input type="number" name="lng" step="any"></div>
+      <div>Latitude: <input type="number" name="lat" id="form_lat" step="any"></div>
+      <div>Longitude: <input type="number" name="lng" id="form_lng" step="any"></div>
       <div><input type="submit" class="btn btn-large btn-primary" value="Add"></div>
     </form>
     <div id='map'></div>
@@ -24,6 +24,14 @@
         var map = new google.maps.Map(mapDiv, {
             center: {lat: -36.4, lng: 148.4},
             zoom: 12
+        });
+        var marker = new google.maps.Marker({
+          map: map
+        });
+        map.addListener('click', function(e) {
+          document.getElementById('form_lat').value = e.latLng.lat()
+          document.getElementById('form_lng').value = e.latLng.lng()
+          marker.setPosition(e.latLng)
         });
       }
     </script>
