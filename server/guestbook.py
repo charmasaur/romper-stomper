@@ -34,6 +34,10 @@ class LiftList(ndb.Model):
     lift_list = ndb.JsonProperty(indexed=False)
 
 
+def get_api_key():
+    f = open('api_key.txt', 'r')
+    return f.read()
+
 def get_distance(lat1, lng1, lat2, lng2):
     [lat1r, lng1r, lat2r, lng2r] = [math.radians(x) for x in [lat1, lng1, lat2, lng2]]
     return earth_radius * math.acos(math.sin(lat1r) * math.sin(lat2r) + math.cos(lat1r) * math.cos(lat2r) * math.cos(lng1r - lng2r))
@@ -141,14 +145,11 @@ class Here(webapp2.RequestHandler):
                 ago_string = ""
             self.response.write(lift.key.id() + ": " + str(lift.last_wait / 60) + " min " + str(lift.last_wait % 60) + " sec" + ago_string + delimiter)
 
-
 class Add(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('add.html')
 
-        f = open('api_key.txt', 'r')
-        api_key = f.read()
-        self.response.write(template.render({'API_KEY' : api_key}))
+        self.response.write(template.render({'API_KEY' : get_api_key()}))
 
 
 class AddInternal(webapp2.RequestHandler):
@@ -172,10 +173,14 @@ class AddInternal(webapp2.RequestHandler):
 
 class ListLifts(webapp2.RequestHandler):
     def get(self):
+        template = JINJA_ENVIRONMENT.get_template('list.html')
         lift_list = get_lift_list_item().lift_list
+        tuples = []
         for name in lift_list:
             (lat, lng) = lift_list[name]
+            tuples.append((name, lat, lng))
             self.response.write(name + ": (" + str(lat) + ", " + str(lng) + ")<br>")
+        self.response.write(template.render({'list' : tuples, 'API_KEY' : get_api_key()}))
 
 
 app = webapp2.WSGIApplication([
