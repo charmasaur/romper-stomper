@@ -56,16 +56,20 @@ def get_distance(lat1, lng1, lat2, lng2):
     [lat1r, lng1r, lat2r, lng2r] = [math.radians(x) for x in [lat1, lng1, lat2, lng2]]
     return earth_radius * math.acos(math.sin(lat1r) * math.sin(lat2r) + math.cos(lat1r) * math.cos(lat2r) * math.cos(lng1r - lng2r))
 
-def is_distance_within(lat1, lng1, lat2, lng2):
-    return get_distance(lat1, lng1, lat2, lng2) < distance_threshold
-
+# Returns a tuple (name, distance) for the nearest lift, or (None, infinity) if there are no lifts.
 def get_nearest(lat, lng, acc):
-    # TODO: Make this query the lifts in the db rather than look through the hardcoded list. Even
-    # better would be if we could somehow query for the nearest...
-    # https://pypi.python.org/pypi/geomodel/0.1.0 might be worth a look.
+    (best_name, best_distance) = (None, float("inf"))
     for (name, llat, llng) in lifts:
-        if is_distance_within(lat, lng, llat, llng):
-            return name
+        distance = get_distance(lat, lng, llat, llng)
+        if distance < best_distance:
+            (best_name, best_distance) = (name, distance)
+    return (best_name, best_distance)
+
+# Returns the name of the current lift, or None if not at a lift.
+def get_current_lift_name(lat, lng, acc):
+    (best_name, best_distance) = get_nearest(lat, lng, acc)
+    if best_distance < distance_threshold:
+        return best_name
     return None
 
 def update_lift(name, wait, update_time):
@@ -100,7 +104,7 @@ class Here(webapp2.RequestHandler):
                 delimiter = '<br>'
             else:
                 delimiter = "|"
-            nearest = None
+            current_lift_name = None
         else:
             delimiter = "|"
             # Get the fellow, or create him if we haven't seen him.
@@ -110,8 +114,8 @@ class Here(webapp2.RequestHandler):
                 fellow = Fellow(id=token)
 
             # Figure out his nearest lift, and update as appropriate.
-            nearest = get_nearest(lat, lng, acc)
-            if nearest == fellow.last_lift:
+            current_lift_name = get_current_lift_name(lat, lng, acc)
+            if current_lift_name == fellow.last_lift:
                 if fellow.last_lift:
                     fellow.last_lift_wait = fellow.last_lift_wait + tim - fellow.last_update
                 fellow.last_update = tim
@@ -119,7 +123,7 @@ class Here(webapp2.RequestHandler):
                 if fellow.last_lift:
                     print("last lift: " + fellow.last_lift)
                     update_lift(fellow.last_lift, fellow.last_lift_wait, fellow.last_update) 
-                fellow.last_lift = nearest
+                fellow.last_lift = current_lift_name
                 fellow.last_lift_wait = 0
                 fellow.last_update = tim
 
@@ -127,8 +131,8 @@ class Here(webapp2.RequestHandler):
             fellow.put()
 
         lifters = Lift.query().fetch(100)
-        if nearest:
-            self.response.write("You are at: " + nearest + "|")
+        if current_lift_name:
+            self.response.write("You are at: " + current_lift_name + "|")
         for lift in lifters:
             # TODO: Make better.
             if not lift.last_wait:
