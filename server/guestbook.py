@@ -170,9 +170,17 @@ class AddInternal(webapp2.RequestHandler):
         else:
             self.response.write("Didn't add, it's already there")
 
+class ListLifts(webapp2.RequestHandler):
+    def get(self):
+        lift_list = get_lift_list_item().lift_list
+        for name in lift_list:
+            (lat, lng) = lift_list[name]
+            self.response.write(name + ": (" + str(lat) + ", " + str(lng) + ")<br>")
+
 
 app = webapp2.WSGIApplication([
     ('/here', Here),
     ('/add', Add),
     ('/add_internal', AddInternal),
+    ('/list_lifts', ListLifts),
 ], debug=True)
