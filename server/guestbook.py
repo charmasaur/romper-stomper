@@ -16,26 +16,6 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-lifts = [
-    ("Blue Calf", -36.3845236, 148.3715626),
-    ("Blue Cow", -36.382989, 148.379258),
-    ("Carpark", -36.377766, 148.375920),
-    ("Freedom", -36.385398, 148.378838),
-    ("Early Starter", -36.383761, 148.394574),
-    ("Summit", -36.381758, 148.397523),
-    ("Terminal", -36.383041, 148.397376),
-    ("Ridge", -36.378971, 148.407400),
-    ("Brumby", -36.385608, 148.399890),
-    ("Pleasant Valley", -36.387208, 148.399514),
-    ("North Perisher", -36.392348, 148.409069),
-    ("Interceptor", -36.394566, 148.409089),
-    ("Sun Valley", -36.406811, 148.395866),
-    ("Happy Valley", -36.408446, 148.398216),
-    ("Mt Perisher Chairs", -36.410348, 148.400238),
-    ("International", -36.413069, 148.395704),
-    ("Eyre", -36.415602, 148.391805),
-    ]
-
 earth_radius = 6371000
 distance_threshold = 100
 
@@ -58,9 +38,10 @@ def get_distance(lat1, lng1, lat2, lng2):
     return earth_radius * math.acos(math.sin(lat1r) * math.sin(lat2r) + math.cos(lat1r) * math.cos(lat2r) * math.cos(lng1r - lng2r))
 
 # Returns a tuple (name, distance) for the nearest lift, or (None, infinity) if there are no lifts.
-def get_nearest(lat, lng, acc):
+def get_nearest(lat, lng, acc, lift_list):
     (best_name, best_distance) = (None, float("inf"))
-    for (name, llat, llng) in lifts:
+    for name in lift_list:
+        (llat, llng) = lift_list[name]
         distance = get_distance(lat, lng, llat, llng)
         if distance < best_distance:
             (best_name, best_distance) = (name, distance)
@@ -68,7 +49,7 @@ def get_nearest(lat, lng, acc):
 
 # Returns the name of the current lift, or None if not at a lift.
 def get_current_lift_name(lat, lng, acc):
-    (best_name, best_distance) = get_nearest(lat, lng, acc)
+    (best_name, best_distance) = get_nearest(lat, lng, acc, get_lift_list_item().lift_list)
     if best_distance < distance_threshold:
         return best_name
     return None
