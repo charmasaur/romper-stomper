@@ -48,8 +48,9 @@ class Fellow(ndb.Model):
 class Lift(ndb.Model):
     last_wait = ndb.IntegerProperty(indexed=False)
     last_update = ndb.IntegerProperty(indexed=False)
-    # TODO: Should this be indexed?
-    location = ndb.GeoPtProperty(indexed=False)
+
+class LiftList(ndb.Model):
+    lift_list = ndb.JsonProperty(indexed=False)
 
 
 def get_distance(lat1, lng1, lat2, lng2):
@@ -80,13 +81,25 @@ def update_lift(name, wait, update_time):
     lift.last_update = update_time
     lift.put()
 
-def maybe_create_lift(name, lat, lng):
-    if ndb.Key(Lift, name).get():
+def get_lift_list_item():
+    items = LiftList.query().fetch(1)
+    if items:
+        item = items[0]
+    else:
+        item = LiftList()
+        item.lift_list = {}
+    return item
+
+def maybe_add_lift(name, lat, lng):
+    lift_list_item = get_lift_list_item()
+
+    if name in lift_list_item.lift_list:
         return False
     # TODO: See if there are any lifts with the same location too.
 
-    lift = Lift(id=name, location=ndb.GeoPt(lat=lat,lon=lng))
-    lift.put()
+
+    lift_list_item.lift_list.update({name : (lat, lng)})
+    lift_list_item.put()
     return True
 
 
@@ -161,16 +174,17 @@ class AddInternal(webapp2.RequestHandler):
             lat = float(self.request.get('lat', '0.0'))
             lng = float(self.request.get('lng', '0.0'))
         except ValueError:
-            self.response.write("No")
+            self.response.write("Improper request")
             return
 
         if name == '' or lat == 0.0 or lng == 0.0:
-            self.response.write("No")
+            self.response.write("Improper request")
+            return
 
-        if maybe_create_lift(name, lat, lng):
-            self.response.write("Added")
+        if maybe_add_lift(name, lat, lng):
+            self.response.write("Added " + name + " at (" + str(lat) + ", " + str(lng) + ")")
         else:
-            self.response.write("Already added")
+            self.response.write("Didn't add, it's already there")
 
 
 app = webapp2.WSGIApplication([
