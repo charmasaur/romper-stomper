@@ -18,6 +18,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 earth_radius = 6371000
 distance_threshold = 100
+identical_lift_distance_threshold = 10
 
 
 class Fellow(ndb.Model):
@@ -76,8 +77,10 @@ def maybe_add_lift(name, lat, lng):
 
     if name in lift_list_item.lift_list:
         return False
-    # TODO: See if there are any lifts with the same location too.
 
+    (best_name, best_distance) = get_nearest(lat, lng, 0, lift_list_item.lift_list)
+    if best_distance < identical_lift_distance_threshold:
+        return False
 
     lift_list_item.lift_list.update({name : (lat, lng)})
     lift_list_item.put()
