@@ -21,12 +21,12 @@ distance_threshold = 100
 identical_lift_distance_threshold = 10
 
 
-class Fellow(ndb.Model):
+class UserInfo(ndb.Model):
     last_lift = ndb.StringProperty(indexed=False)
     last_lift_wait = ndb.IntegerProperty(indexed=False)
     last_update = ndb.IntegerProperty(indexed=False)
 
-class Lift(ndb.Model):
+class LiftWaitInfo(ndb.Model):
     last_wait = ndb.IntegerProperty(indexed=False)
     last_update = ndb.IntegerProperty(indexed=False)
 
@@ -60,9 +60,9 @@ def get_current_lift_name(lat, lng, acc):
     return None
 
 def update_lift(name, wait, update_time):
-    lift = ndb.Key(Lift, name).get()
+    lift = ndb.Key(LiftWaitInfo, name).get()
     if lift == None:
-        lift = Lift(id=name)
+        lift = LiftWaitInfo(id=name)
     lift.last_wait = wait
     lift.last_update = update_time
     lift.put()
@@ -108,30 +108,30 @@ class Here(webapp2.RequestHandler):
             current_lift_name = None
         else:
             delimiter = "|"
-            # Get the fellow, or create him if we haven't seen him.
-            key = ndb.Key(Fellow, token)
-            fellow = key.get()
-            if fellow == None:
-                fellow = Fellow(id=token)
+            # Get the user, or create him if we haven't seen him.
+            key = ndb.Key(UserInfo, token)
+            user = key.get()
+            if user == None:
+                user = UserInfo(id=token)
 
             # Figure out his nearest lift, and update as appropriate.
             current_lift_name = get_current_lift_name(lat, lng, acc)
-            if current_lift_name == fellow.last_lift:
-                if fellow.last_lift:
-                    fellow.last_lift_wait = fellow.last_lift_wait + tim - fellow.last_update
-                fellow.last_update = tim
+            if current_lift_name == user.last_lift:
+                if user.last_lift:
+                    user.last_lift_wait = user.last_lift_wait + tim - user.last_update
+                user.last_update = tim
             else:
-                if fellow.last_lift:
-                    print("last lift: " + fellow.last_lift)
-                    update_lift(fellow.last_lift, fellow.last_lift_wait, fellow.last_update) 
-                fellow.last_lift = current_lift_name
-                fellow.last_lift_wait = 0
-                fellow.last_update = tim
+                if user.last_lift:
+                    print("last lift: " + user.last_lift)
+                    update_lift(user.last_lift, user.last_lift_wait, user.last_update)
+                user.last_lift = current_lift_name
+                user.last_lift_wait = 0
+                user.last_update = tim
 
-            # Save this fellow.
-            fellow.put()
+            # Save this user.
+            user.put()
 
-        lifters = Lift.query().fetch(100)
+        lifters = LiftWaitInfo.query().fetch(100)
         if current_lift_name:
             self.response.write("You are at: " + current_lift_name + "|")
         for lift in lifters:
