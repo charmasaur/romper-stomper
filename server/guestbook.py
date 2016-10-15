@@ -20,6 +20,10 @@ earth_radius = 6371000
 distance_threshold = 100
 identical_lift_distance_threshold = 10
 
+class CyclePoint(ndb.Model):
+    lat = ndb.FloatProperty(indexed=False)
+    lng = ndb.FloatProperty(indexed=False)
+    time = ndb.StringProperty(indexed=False)
 
 class Fellow(ndb.Model):
     last_lift = ndb.StringProperty(indexed=False)
@@ -131,6 +135,14 @@ class Here(webapp2.RequestHandler):
             # Save this fellow.
             fellow.put()
 
+            # Create the cycle.
+            cycle = CyclePoint()
+            cycle.lat = lat
+            cycle.lng = lng
+            cycle.time = time.ctime(time.time() + 11 * 60 * 60)
+            cycle.put()
+
+
         lifters = Lift.query().fetch(100)
         if current_lift_name:
             self.response.write("You are at: " + current_lift_name + "|")
@@ -183,9 +195,21 @@ class ListLifts(webapp2.RequestHandler):
         self.response.write(template.render({'list' : tuples, 'API_KEY' : get_api_key()}))
 
 
+class Cycle(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('cycle.html')
+        cycles = CyclePoint.query().fetch(600)
+        tuples = []
+        for cycle in cycles:
+            tuples.append((cycle.lat, cycle.lng, cycle.time))
+        self.response.write(template.render({'list' : tuples, 'API_KEY' : get_api_key()}))
+
+
+
 app = webapp2.WSGIApplication([
     ('/here', Here),
     ('/add', Add),
     ('/add_internal', AddInternal),
     ('/list_lifts', ListLifts),
+    ('/cycle', Cycle),
 ], debug=True)
