@@ -8,19 +8,21 @@
 # methods (the frontend knows that a "Here" request sometimes means "here's a
 # location", and sometimes means "hey, give me lifts"; the backend shouldn't
 # care about that).
+##########################
 # So this suggests that the backend should be providing the information to show,
 # and the frontend just converts that to a form appropriate for sending to the
 # various clients.
+##########################
 
-# Returns the list of wait information about all lifts
+# Returns the list of wait information (string) about all lifts
 def get_lift_wait_info_list():
     return None
 
-# Returns the list of geographical information about all lifts
+# Returns the list of geographical information (name, lat, lng) about all lifts
 def get_lift_geo_info_list():
     return None
 
-# Posts a location of a particular user
+# Posts a location of a particular user. Returns the user's current lift.
 def set_user_location(token, lat, lng, accuracy, time):
     return None
 
