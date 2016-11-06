@@ -1,48 +1,43 @@
 #!/usr/bin/env python
 
-import os
-import urllib
-
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
 import time
 import math
-import jinja2
-import webapp2
-
-JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
 
 earth_radius = 6371000
 distance_threshold = 100
 identical_lift_distance_threshold = 10
 
 
+# Database models.
+
+# A user who can be waiting at a lift.
 class UserInfo(ndb.Model):
     last_lift = ndb.StringProperty(indexed=False)
     last_lift_wait = ndb.IntegerProperty(indexed=False)
     last_update = ndb.IntegerProperty(indexed=False)
 
+# Wait time information about a lift.
 class LiftWaitInfo(ndb.Model):
     last_wait = ndb.IntegerProperty(indexed=False)
     last_update = ndb.IntegerProperty(indexed=False)
 
+# List of lifts with geographical information.
 class LiftList(ndb.Model):
     lift_list = ndb.JsonProperty(indexed=False)
 
 
-def get_api_key():
-    f = open('api_key.txt', 'r')
-    return f.read()
+# Static helpers.
 
+# Get the distance between two points.
 def get_distance(lat1, lng1, lat2, lng2):
     [lat1r, lng1r, lat2r, lng2r] = [math.radians(x) for x in [lat1, lng1, lat2, lng2]]
     return earth_radius * math.acos(math.sin(lat1r) * math.sin(lat2r) + math.cos(lat1r) * math.cos(lat2r) * math.cos(lng1r - lng2r))
 
-# Returns a tuple (name, distance) for the nearest lift, or (None, infinity) if there are no lifts.
+# Given a location and list of lifts, returns a tuple (name, distance) for the nearest lift, or
+# (None, infinity) if there are no lifts.
 def get_nearest(lat, lng, acc, lift_list):
     (best_name, best_distance) = (None, float("inf"))
     for name in lift_list:
@@ -52,13 +47,18 @@ def get_nearest(lat, lng, acc, lift_list):
             (best_name, best_distance) = (name, distance)
     return (best_name, best_distance)
 
-# Returns the name of the current lift, or None if not at a lift.
+
+# Database helpers.
+
+# Given the location, returns the name of the current lift, or None if not at a lift.
 def get_current_lift_name(lat, lng, acc):
     (best_name, best_distance) = get_nearest(lat, lng, acc, get_lift_list_item().lift_list)
     if best_distance < distance_threshold:
         return best_name
     return None
 
+# Updates a particular lift's wait info with the given wait and update time (creating the wait info
+# if necessary).
 def update_lift(name, wait, update_time):
     lift = ndb.Key(LiftWaitInfo, name).get()
     if lift == None:
@@ -67,6 +67,7 @@ def update_lift(name, wait, update_time):
     lift.last_update = update_time
     lift.put()
 
+# Gets the list of geographical lift info (creating it if necessary).
 def get_lift_list_item():
     items = LiftList.query().fetch(1)
     if items:
@@ -76,6 +77,7 @@ def get_lift_list_item():
         item.lift_list = {}
     return item
 
+# Adds geographical information about a lift, unless that lift already exists.
 def maybe_add_lift(name, lat, lng):
     lift_list_item = get_lift_list_item()
 
@@ -91,101 +93,63 @@ def maybe_add_lift(name, lat, lng):
     return True
 
 
-class Here(webapp2.RequestHandler):
+# Backend methods.
 
-    def get(self):
-        token = self.request.get('token', '')
-        lat = float(self.request.get('lat', '0.0'))
-        lng = float(self.request.get('lng', '0.0'))
-        acc = float(self.request.get('acc', '0.0'))
-        tim = int(self.request.get('tim', '0'))
-
-        if lat == 0.0 and lng == 0.0:
-            if token == '':
-                delimiter = '<br>'
-            else:
-                delimiter = "|"
-            current_lift_name = None
+# Returns the list of wait information (string) about all lifts
+def get_lift_wait_info_list():
+    lifters = LiftWaitInfo.query().fetch(100)
+    lift_strings = []
+    for lift in lifters:
+        # TODO: Make better.
+        if not lift.last_wait:
+            lift_strings.append(lift.key.id() + ": " + "no data yet")
+            continue
+        if lift.last_update:
+            ago_string = " (" + str(((int) (time.time()) - lift.last_update) / 60) + " min ago)"
         else:
-            delimiter = "|"
-            # Get the user, or create him if we haven't seen him.
-            key = ndb.Key(UserInfo, token)
-            user = key.get()
-            if user == None:
-                user = UserInfo(id=token)
+            ago_string = ""
+        lift_strings.append(lift.key.id() + ": " + str(lift.last_wait / 60) + " min " + str(lift.last_wait % 60) + " sec" + ago_string)
 
-            # Figure out his nearest lift, and update as appropriate.
-            current_lift_name = get_current_lift_name(lat, lng, acc)
-            if current_lift_name == user.last_lift:
-                if user.last_lift:
-                    user.last_lift_wait = user.last_lift_wait + tim - user.last_update
-                user.last_update = tim
-            else:
-                if user.last_lift:
-                    print("last lift: " + user.last_lift)
-                    update_lift(user.last_lift, user.last_lift_wait, user.last_update)
-                user.last_lift = current_lift_name
-                user.last_lift_wait = 0
-                user.last_update = tim
+    return lift_strings
 
-            # Save this user.
-            user.put()
+# Returns the list of geographical information (name, lat, lng)) about all lifts
+def get_lift_geo_info_list():
+    lift_list = get_lift_list_item().lift_list
+    tuples = []
+    for name in lift_list:
+        (lat, lng) = lift_list[name]
+        tuples.append((name, lat, lng))
+    return tuples
 
-        lifters = LiftWaitInfo.query().fetch(100)
-        if current_lift_name:
-            self.response.write("You are at: " + current_lift_name + "|")
-        for lift in lifters:
-            # TODO: Make better.
-            if not lift.last_wait:
-                self.response.write(lift.key.id() + ": " + "no data yet" + delimiter)
-                continue
-            if lift.last_update:
-                ago_string = " (" + str(((int) (time.time()) - lift.last_update) / 60) + " min ago)"
-            else:
-                ago_string = ""
-            self.response.write(lift.key.id() + ": " + str(lift.last_wait / 60) + " min " + str(lift.last_wait % 60) + " sec" + ago_string + delimiter)
+# Posts a location of a particular user. Returns the user's current lift.
+def set_user_location(token, lat, lng, accuracy, time):
+    # Get the user, or create him if we haven't seen him.
+    key = ndb.Key(UserInfo, token)
+    user = key.get()
+    if user == None:
+        user = UserInfo(id=token)
 
-class Add(webapp2.RequestHandler):
-    def get(self):
-        template = JINJA_ENVIRONMENT.get_template('add.html')
+    # Figure out his nearest lift, and update as appropriate.
+    current_lift_name = get_current_lift_name(lat, lng, accuracy)
+    if current_lift_name == user.last_lift:
+        if user.last_lift:
+            user.last_lift_wait = user.last_lift_wait + time - user.last_update
+        user.last_update = time
+    else:
+        if user.last_lift:
+            print("last lift: " + user.last_lift)
+            update_lift(user.last_lift, user.last_lift_wait, user.last_update)
+        user.last_lift = current_lift_name
+        user.last_lift_wait = 0
+        user.last_update = time
 
-        self.response.write(template.render({'API_KEY' : get_api_key()}))
+    # Save this user.
+    user.put()
 
+    return current_lift_name
 
-class AddInternal(webapp2.RequestHandler):
-    def get(self):
-        name = self.request.get('name', '')
-        try:
-            lat = float(self.request.get('lat', '0.0'))
-            lng = float(self.request.get('lng', '0.0'))
-        except ValueError:
-            self.response.write("Improper request")
-            return
-
-        if name == '' or lat == 0.0 or lng == 0.0:
-            self.response.write("Improper request")
-            return
-
-        if maybe_add_lift(name, lat, lng):
-            self.response.write("Added " + name + " at (" + str(lat) + ", " + str(lng) + ")")
-        else:
-            self.response.write("Didn't add, it's already there")
-
-class ListLifts(webapp2.RequestHandler):
-    def get(self):
-        template = JINJA_ENVIRONMENT.get_template('list.html')
-        lift_list = get_lift_list_item().lift_list
-        tuples = []
-        for name in lift_list:
-            (lat, lng) = lift_list[name]
-            tuples.append((name, lat, lng))
-            self.response.write(name + ": (" + str(lat) + ", " + str(lng) + ")<br>")
-        self.response.write(template.render({'list' : tuples, 'API_KEY' : get_api_key()}))
-
-
-app = webapp2.WSGIApplication([
-    ('/here', Here),
-    ('/add', Add),
-    ('/add_internal', AddInternal),
-    ('/list_lifts', ListLifts),
-], debug=True)
+# Adds a new lift. Returns some kind of status message.
+def maybe_add_new_lift(name, lat, lng):
+    if maybe_add_lift(name, lat, lng):
+        return "Added " + name + " at (" + str(lat) + ", " + str(lng) + ")"
+    return "Didn't add, it's already there"

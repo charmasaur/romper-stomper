@@ -3,21 +3,22 @@
 import os
 import urllib
 
-from google.appengine.api import users
-from google.appengine.ext import ndb
-
-import time
-import math
 import jinja2
 import webapp2
+
+import backend
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-class Here(webapp2.RequestHandler):
+def get_api_key():
+    f = open('api_key.txt', 'r')
+    return f.read()
 
+
+class Here(webapp2.RequestHandler):
     def get(self):
         token = self.request.get('token', '')
         lat = float(self.request.get('lat', '0.0'))
@@ -25,19 +26,22 @@ class Here(webapp2.RequestHandler):
         acc = float(self.request.get('acc', '0.0'))
         tim = int(self.request.get('tim', '0'))
 
-        if lat == 0.0 and lng == 0.0:
-            # This is a request for a list of lifts ...
-            if token == '':
-                # ... from a web client
-                # TODO: get list of lifts from the backend and send them in the response
-            else:
-                # ... from a mobile client
-                # TODO: get a list of lifts and send them in the response
-            current_lift_name = None
-        else:
+        if not lat == 0.0 or not lng == 0.0:
             # We're being notified of a position from a mobile client.
-            # TODO: send (lat, lng, acc, tim, token) to backend for updating
-            # TODO: get a list of lifts and send them in the response
+            current_lift = backend.set_user_location(token, lat, lng, acc, tim)
+            if current_lift:
+                self.response.write("You are at: " + current_lift + "|")
+
+        wait_infos = backend.get_lift_wait_info_list()
+        # Now send a list of lifts to ...
+        if token == '':
+            # ... a web client
+            delimiter = '<br>'
+        else:
+            # ... a mobile client
+            delimiter = '|'
+        for wait_info in wait_infos:
+            self.response.write(wait_info + delimiter)
 
 
 class Add(webapp2.RequestHandler):
@@ -60,12 +64,17 @@ class AddInternal(webapp2.RequestHandler):
             self.response.write("Improper request")
             return
 
-        # TODO: send (lat, lng, name) to backend for updating, and get response and forward it
+        result = backend.maybe_add_new_lift(name, lat, lng)
+        self.response.write(result)
+
 
 class ListLifts(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('list.html')
-        # TODO: get list of lifts from the backend, and send them
+        lifts = backend.get_lift_geo_info_list()
+        for (name, lat, lng) in lifts:
+            self.response.write(name + ": (" + str(lat) + ", " + str(lng) + ")<br>")
+        self.response.write(template.render({'list' : lifts, 'API_KEY' : get_api_key()}))
 
 
 app = webapp2.WSGIApplication([
