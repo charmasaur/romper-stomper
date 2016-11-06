@@ -64,7 +64,7 @@ public class LocationRequester {
     maybeDo();
   }
 
-  public void maybeDo() {
+  private void maybeDo() {
     boolean shouldRequesting = isConnected && request != null && going;
     if (requesting && !shouldRequesting) {
       Log.i(TAG, "Undoing it");
