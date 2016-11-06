@@ -23,6 +23,7 @@ public class Sender {
   private static final String SCHEME = "http";
   private static final String AUTHORITY = "romper-stomper.appspot.com";
   private static final String PATH = "here";
+  private static final String CYCLE_PATH = "cycle_submit";
   private static final String PREFS_NAME = "SENDER";
   private static final String PREFS_KEY_TOKEN = "TOKEN";
 
@@ -57,6 +58,36 @@ public class Sender {
 
   public void update() {
     sendIt(0., 0., 0., 0, true);
+  }
+
+  public void sendCycle(double lat, double lng, long time, String thistoken) {
+    Uri.Builder uriBuilder = new Uri.Builder()
+        .scheme(SCHEME)
+        .authority(AUTHORITY)
+        .path(CYCLE_PATH)
+        .appendQueryParameter("token", thistoken)
+        .appendQueryParameter("lat", Double.toString(lat))
+        .appendQueryParameter("lng", Double.toString(lng))
+        .appendQueryParameter("tim", Long.toString(time));
+    StringRequest stringRequest = new StringRequest(
+        Request.Method.GET,
+        uriBuilder.build().toString(),
+        new Response.Listener<String>() {
+          @Override
+          public void onResponse(String response) {
+            Log.i(TAG, "Got response: " + response);
+            callback.onStatus("Last query successful");
+          }
+        },
+        new Response.ErrorListener() {
+          @Override
+          public void onErrorResponse(VolleyError error) {
+            Log.i(TAG, "Got error: " + error);
+            callback.onStatus("Last query failed: " + error);
+          }
+        });
+    // Add the request to the RequestQueue.
+    queue.add(stringRequest);
   }
 
   private void sendIt(double lat, double lng, double acc, long time, boolean just_request) {
