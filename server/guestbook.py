@@ -25,6 +25,9 @@ class CyclePoint(ndb.Model):
     lng = ndb.FloatProperty(indexed=False)
     time = ndb.StringProperty(indexed=False)
 
+class CyclePath(ndb.Model):
+    point_list = ndb.JsonProperty(indexed=False)
+
 class Fellow(ndb.Model):
     last_lift = ndb.StringProperty(indexed=False)
     last_lift_wait = ndb.IntegerProperty(indexed=False)
@@ -135,13 +138,6 @@ class Here(webapp2.RequestHandler):
             # Save this fellow.
             fellow.put()
 
-            # Create the cycle.
-            cycle = CyclePoint()
-            cycle.lat = lat
-            cycle.lng = lng
-            cycle.time = time.ctime(time.time() + 11 * 60 * 60)
-            cycle.put()
-
 
         lifters = Lift.query().fetch(100)
         if current_lift_name:
@@ -195,7 +191,7 @@ class ListLifts(webapp2.RequestHandler):
         self.response.write(template.render({'list' : tuples, 'API_KEY' : get_api_key()}))
 
 
-class Cycle(webapp2.RequestHandler):
+class DeprecatedCycle(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('cycle.html')
         cycles = CyclePoint.query().fetch(600)
@@ -205,11 +201,45 @@ class Cycle(webapp2.RequestHandler):
         self.response.write(template.render({'list' : tuples, 'API_KEY' : get_api_key()}))
 
 
+class Cycler(webapp2.RequestHandler):
+    def get(self):
+        token = self.request.get('token', '')
+        if not token:
+            self.response.write("You need to provide a token")
+            return
+        template = JINJA_ENVIRONMENT.get_template('cycle.html')
+        path = ndb.Key(CyclePath, token).get()
+        if path == None:
+            self.response.write("Don't have any points yet, try again later")
+            return
+        self.response.write(template.render({'list' : path.point_list, 'API_KEY' : get_api_key()}))
+
+class CycleSubmit(webapp2.RequestHandler):
+    def get(self):
+        token = self.request.get('token', '')
+        lat = float(self.request.get('lat', '0.0'))
+        lng = float(self.request.get('lng', '0.0'))
+        acc = float(self.request.get('acc', '0.0'))
+        tim = int(self.request.get('tim', '0'))
+
+        if lat == 0.0 and lng == 0.0:
+            return
+
+        path = ndb.Key(CyclePath, token).get()
+        if path == None:
+            path = CyclePath(id=token)
+            path.point_list = []
+        # tim is UTC seconds
+        path.point_list.append((lat, lng, time.ctime(tim + 11 * 60 * 60)))
+        path.put()
+
 
 app = webapp2.WSGIApplication([
     ('/here', Here),
     ('/add', Add),
     ('/add_internal', AddInternal),
     ('/list_lifts', ListLifts),
-    ('/cycle', Cycle),
+    ('/cycle', DeprecatedCycle),
+    ('/cycler', Cycler),
+    ('/cycle_submit', CycleSubmit),
 ], debug=True)

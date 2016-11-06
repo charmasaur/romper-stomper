@@ -19,6 +19,7 @@
             center: {lat: -33.8688, lng: 151.2093},
             zoom: 12
         });
+        var coords = [];
         {% for tuple in list %}
         var marker = new google.maps.Marker({
           map: map,
@@ -33,7 +34,16 @@
         marker.addListener('click', (function(mark, inf) {
           inf.open(map, mark);
         }).bind(this, marker, info));
+        coords.push({lat: {{tuple.0}}, lng: {{tuple.1}}})
         {% endfor %}
+        var path = new google.maps.Polyline({
+          map: map,
+          path: coords,
+          geodesic: true,
+          strokeColor: '#0000FF',
+          strokeOpacity: 1.0,
+          strokeWeight: 2
+        });
       }
     </script>
     {{ API_KEY }}
