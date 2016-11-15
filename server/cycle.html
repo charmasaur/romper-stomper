@@ -36,6 +36,9 @@
         }).bind(this, marker, info));
         coords.push({lat: {{tuple.0}}, lng: {{tuple.1}}})
         {% endfor %}
+        if (coords.length > 0) {
+          map.setCenter(coords[coords.length - 1]);
+        }
         var path = new google.maps.Polyline({
           map: map,
           path: coords,
