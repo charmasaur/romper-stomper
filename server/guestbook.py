@@ -220,6 +220,7 @@ class CycleSubmit(webapp2.RequestHandler):
         lat = float(self.request.get('lat', '0.0'))
         lng = float(self.request.get('lng', '0.0'))
         acc = float(self.request.get('acc', '0.0'))
+        # tim is UTC seconds
         tim = int(self.request.get('tim', '0'))
 
         if lat == 0.0 and lng == 0.0:
@@ -229,10 +230,16 @@ class CycleSubmit(webapp2.RequestHandler):
         if path == None:
             path = CyclePath(id=token)
             path.point_list = []
-        # tim is UTC seconds
-        path.point_list.append((lat, lng, time.ctime(tim + 11 * 60 * 60)))
+        # we assume the list is already sorted (in increasing order of time), so to keep it that
+        # way we just need to look backwards through the list until we find something not bigger
+        # than the new value (and then insert the new value after that element)
+        index = len(path.point_list) - 1
+        while index >= 0:
+            if len(path.point_list[index]) < 4 or path.point_list[index][3] <= tim:
+                break
+            index = index - 1
+        path.point_list.insert(index + 1, (lat, lng, time.ctime(tim + 11 * 60 * 60), tim))
         path.put()
-
 
 app = webapp2.WSGIApplication([
     ('/here', Here),
