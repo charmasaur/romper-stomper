@@ -14,22 +14,25 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ShareActionProvider;
+import android.widget.ListView;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+import java.text.SimpleDateFormat;
 
 public class CycleActivity extends Activity {
   private static final String TAG = CycleActivity.class.getSimpleName();
   private static final int PERMISSION_CODE = 1338;
 
   private Button button;
+  private ArrayAdapter<String> adapter;
 
   private LocationRequester requester;
   private Sender sender;
-  private ShareActionProvider shareActionProvider;
 
   @Nullable
   private String token;
@@ -42,6 +45,8 @@ public class CycleActivity extends Activity {
     setContentView(R.layout.activity_cycle);
 
     button = (Button) findViewById(R.id.start_stop_button);
+    adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1);
+    ((ListView) findViewById(R.id.list)).setAdapter(adapter);
 
     requester = new LocationRequester(this, requesterCallback);
     sender = new Sender(this, senderCallback);
@@ -54,20 +59,12 @@ public class CycleActivity extends Activity {
           token = null;
         } else {
           token = newToken();
-          //setShareIntent();
           requester.go();
-          invalidateOptionsMenu();
         }
+        invalidateOptionsMenu();
         updateButtonText();
       }
     });
-
-    //findViewById(R.id.share_button).setOnClickListener(new View.OnClickListener() {
-    //  @Override
-    //  public void onClick(View view) {
-    //    startActivity(Intent.createChooser(getShareIntent(), "Share via..."));
-    //  }
-    //});
 
     updateButtonText();
 
@@ -77,7 +74,6 @@ public class CycleActivity extends Activity {
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     getMenuInflater().inflate(R.menu.activity_cycle, menu);
-    //shareActionProvider = (ShareActionProvider) menu.findItem(R.id.menu_share).getActionProvider();
     return true;
   }
 
@@ -120,10 +116,6 @@ public class CycleActivity extends Activity {
     return intent;
   }
 
-  private void setShareIntent() {
-    shareActionProvider.setShareIntent(getShareIntent());
-  }
-
   private void getPermission() {
     String[] them = new String[] {Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.INTERNET};
@@ -162,12 +154,17 @@ public class CycleActivity extends Activity {
 
     @Override
     public void onStatus(String status) {
+      adapter.add("Status: " + status);
     }
   };
 
   private final LocationRequester.Callback requesterCallback = new LocationRequester.Callback() {
     @Override
     public void onLocation(double lat, double lng, double acc, long time) {
+      SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+      sdf.setTimeZone(TimeZone.getDefault());
+      String ts = sdf.format(new Date(time * 1000));
+      adapter.add("(" + lat + "," + lng + ")" + " at " + ts);
       sender.sendCycle(lat, lng, time, token);
     }
   };
