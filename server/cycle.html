@@ -7,11 +7,19 @@
       width: 100%;
       height: 100%;
     }
+    #over_map {
+      position: absolute;
+      text-align: center;
+      width: 100%;
+      top: 10px;
+      z-index: 99;
+    }
     </style>
   </head>
   </head>
   <body>
     <div id='map'></div>
+    <div id='over_map'><input type="button" value="Refresh" onClick="window.location.reload()"></div>
     <script>
       function initMap() {
         var mapDiv = document.getElementById('map');
