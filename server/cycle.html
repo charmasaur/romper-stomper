@@ -27,7 +27,11 @@
             center: {lat: -33.8688, lng: 151.2093},
             zoom: 12
         });
+
         var coords = [];
+        var lastinfo;
+        var lastmarker;
+
         {% for tuple in list %}
         var marker = new google.maps.Marker({
           map: map,
@@ -42,10 +46,14 @@
         marker.addListener('click', (function(mark, inf) {
           inf.open(map, mark);
         }).bind(this, marker, info));
-        coords.push({lat: {{tuple.0}}, lng: {{tuple.1}}})
+        coords.push({lat: {{tuple.0}}, lng: {{tuple.1}}});
+        lastinfo = info;
+        lastmarker = marker;
         {% endfor %}
+
         if (coords.length > 0) {
           map.setCenter(coords[coords.length - 1]);
+          info.open(map, marker);
         }
         var path = new google.maps.Polyline({
           map: map,
