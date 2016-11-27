@@ -140,7 +140,7 @@ public class CycleActivity extends Activity {
   }
 
   private static String newToken() {
-    byte[] randomBytes = new byte[10];
+    byte[] randomBytes = new byte[12];
     new SecureRandom().nextBytes(randomBytes);
     // Use NO_WRAP since otherwise this won't get saved correctly to shared preferences (if we ever
     // wanted to do that).
