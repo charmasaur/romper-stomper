@@ -22,7 +22,8 @@
         <activity
             android:name=".CycleActivity"
             android:label="@string/cycle_activity_name"
-            android:launchMode="singleTop" >
+            android:launchMode="singleTop"
+            android:taskAffinity="com.github.charmasaur.rompercycler">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
