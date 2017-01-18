@@ -55,11 +55,9 @@ public class CycleActivity extends Activity {
       @Override
       public void onClick(View view) {
         if (token != null) {
-          requester.stop();
-          token = null;
+          stop();
         } else {
-          token = newToken();
-          requester.go();
+          start();
         }
         invalidateOptionsMenu();
         updateButtonText();
@@ -95,6 +93,9 @@ public class CycleActivity extends Activity {
 
   @Override
   public void onDestroy() {
+    if (token != null) {
+      stop();
+    }
     requester.destroy();
     super.onDestroy();
   }
@@ -103,6 +104,24 @@ public class CycleActivity extends Activity {
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grants) {
     Log.i(TAG, "Got result");
     requester.onPermissions();
+  }
+
+  private void start() {
+    if (token != null) {
+      throw new RuntimeException("Started when started");
+    }
+    token = newToken();
+    CycleService.start(CycleActivity.this);
+    requester.go();
+  }
+
+  private void stop() {
+    if (token == null) {
+      throw new RuntimeException("Stopped when stopped");
+    }
+    requester.stop();
+    CycleService.stop(CycleActivity.this);
+    token = null;
   }
 
   private Intent getShareIntent() {
