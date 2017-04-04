@@ -20,6 +20,22 @@ import java.util.TimeZone;
 
 public final class CycleService extends Service {
   private static final String TAG = CycleService.class.getSimpleName();
+  /**
+   * Extra to be sent with startService when the service should quit.
+   *
+   * <p>This is kind of interesting. If we bind with BIND_AUTO_CREATE then it isn't an option to
+   * use only stopSelf to stop, because that won't do anything. Instead we need to do the teardown
+   * manually and call stopSelf. But to do the teardown we either need to be bound or in
+   * onStartCommand, and being bound isn't really an option if we're doing it from a notification
+   * action (can't bind in a BroadcastReceiver... I guess we could start a new service-stopper
+   * service and bind from that, but in that case we'd be using onStartCommand just from a
+   * different service). That then implies that we need to do it like it is at the moment -- use
+   * onStartCommand to stop too.
+   *
+   * <p>HOWEVER if we bind without BIND_AUTO_CREATE, calling stopSelf will terminate the bindings.
+   * So if we did it that way then we'd remove start/stop from the binder, and use
+   * startService/stopService to start/stop.
+   */
   private static final String QUIT_EXTRA = "quit";
   private final List<Runnable> listeners = new ArrayList<>();
   private LocationRequester locationRequester;

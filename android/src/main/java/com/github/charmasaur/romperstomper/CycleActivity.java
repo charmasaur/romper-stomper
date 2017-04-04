@@ -167,6 +167,7 @@ public class CycleActivity extends Activity {
   private final ServiceConnection connection = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName className, IBinder binder) {
+      Log.i(TAG, "onServiceConnected");
       serviceBinder = (CycleService.Binder) binder;
       serviceBinder.addListener(binderListener);
       updateAll();
@@ -174,6 +175,7 @@ public class CycleActivity extends Activity {
 
     @Override
     public void onServiceDisconnected(ComponentName className) {
+      Log.i(TAG, "onServiceDisconnected");
       serviceBinder = null;
       updateAll();
     }
