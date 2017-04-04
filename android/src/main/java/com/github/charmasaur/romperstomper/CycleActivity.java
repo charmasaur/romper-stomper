@@ -55,17 +55,19 @@ public class CycleActivity extends Activity {
         if (serviceBinder == null) {
           throw new RuntimeException("onClick called when not bound");
         } else if (!havePermissions) {
-          getOrUpdatePermissions();
+          getPermissions();
         } else if (serviceBinder.isStarted()) {
           serviceBinder.stop();
         } else {
           serviceBinder.start();
         }
-        updateAll();
       }
     });
 
-    getOrUpdatePermissions();
+    havePermissions = checkThePermissions();
+    if (!havePermissions) {
+      getPermissions();
+    }
     updateAll();
 
     if (!bindService(new Intent(this, CycleService.class), connection, BIND_AUTO_CREATE)) {
@@ -97,6 +99,9 @@ public class CycleActivity extends Activity {
 
   @Override
   public void onDestroy() {
+    if (serviceBinder != null) {
+      serviceBinder.removeListener(binderListener);
+    }
     unbindService(connection);
     super.onDestroy();
   }
@@ -108,11 +113,8 @@ public class CycleActivity extends Activity {
     updateAll();
   }
 
-  private void getOrUpdatePermissions() {
-    havePermissions = checkThePermissions();
-    if (!havePermissions) {
-      ActivityCompat.requestPermissions(this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
-    }
+  private void getPermissions() {
+    ActivityCompat.requestPermissions(this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
   }
 
   private boolean checkThePermissions() {
@@ -155,11 +157,18 @@ public class CycleActivity extends Activity {
     invalidateOptionsMenu();
   }
 
+  private final Runnable binderListener = new Runnable() {
+    @Override
+    public void run() {
+      updateAll();
+    }
+  };
 
   private final ServiceConnection connection = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName className, IBinder binder) {
       serviceBinder = (CycleService.Binder) binder;
+      serviceBinder.addListener(binderListener);
       updateAll();
     }
 

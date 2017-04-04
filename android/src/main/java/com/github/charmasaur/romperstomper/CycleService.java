@@ -1,24 +1,27 @@
 package com.github.charmasaur.romperstomper;
 
 import android.Manifest;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Base64;
 import android.util.Log;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.util.Date;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
 public final class CycleService extends Service {
   private static final String TAG = CycleService.class.getSimpleName();
+  private static final String QUIT_EXTRA = "quit";
+  private final List<Runnable> listeners = new ArrayList<>();
   private LocationRequester locationRequester;
   private Sender sender;
 
@@ -37,6 +40,8 @@ public final class CycleService extends Service {
     void stop();
     boolean isStarted();
     @Nullable String getToken();
+    void addListener(Runnable listener);
+    void removeListener(Runnable listener);
   }
 
   @Override
@@ -55,17 +60,64 @@ public final class CycleService extends Service {
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     Log.i(TAG, "onStartCommand");
+    if (intent.hasExtra(QUIT_EXTRA)) {
+      maybeStop();
+    } else {
+      maybeStart();
+    }
     return START_NOT_STICKY;
   }
 
   @Override
   public void onDestroy() {
     // It's possible somebody else is killing us. That's a bit weird, but we can at least clean up.
-    if (token != null) {
-      locationRequester.stop();
-    }
+    maybeStop();
     locationRequester.destroy();
     super.onDestroy();
+  }
+
+  private void maybeStart() {
+    if (token != null) {
+      return;
+    }
+    token = newToken();
+    // TODO: Handle permissions properly.
+    locationRequester.onPermissions();
+    locationRequester.go();
+    startForeground(1, new NotificationCompat.Builder(this)
+        .setContentTitle("Romping")
+        .setContentIntent(
+            PendingIntent.getActivity(
+                this,
+                0,
+                new Intent(this, CycleActivity.class),
+                PendingIntent.FLAG_UPDATE_CURRENT))
+        .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+        .addAction(
+            android.R.drawable.ic_menu_close_clear_cancel,
+            "Stop",
+            PendingIntent.getService(
+              this,
+              1,
+              new Intent(this, CycleService.class).putExtra(QUIT_EXTRA, true),
+              PendingIntent.FLAG_UPDATE_CURRENT))
+        .build());
+    for (Runnable r : listeners) {
+      r.run();
+    }
+  }
+
+  private void maybeStop() {
+    if (token == null) {
+      return;
+    }
+    token = null;
+    locationRequester.stop();
+    stopForeground(true);
+    stopSelf();
+    for (Runnable r : listeners) {
+      r.run();
+    }
   }
 
   private final LocationRequester.Callback locationRequesterCallback =
@@ -91,35 +143,12 @@ public final class CycleService extends Service {
   private final class BinderImpl extends android.os.Binder implements Binder {
     @Override
     public void start() {
-      if (token != null) {
-        return;
-      }
-      token = newToken();
-      // TODO: Handle permissions properly.
-      locationRequester.onPermissions();
-      locationRequester.go();
       startService(new Intent(CycleService.this, CycleService.class));
-      startForeground(1, new Notification.Builder(CycleService.this)
-          .setContentTitle("Romping")
-          .setContentIntent(
-              PendingIntent.getActivity(
-                  CycleService.this,
-                  0,
-                  new Intent(CycleService.this, CycleActivity.class),
-                  Intent.FLAG_ACTIVITY_NEW_TASK))
-          .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-          .build());
     }
 
     @Override
     public void stop() {
-      if (token == null) {
-        return;
-      }
-      token = null;
-      locationRequester.stop();
-      stopForeground(true);
-      stopSelf();
+      startService(new Intent(CycleService.this, CycleService.class).putExtra(QUIT_EXTRA, true));
     }
 
     @Override
@@ -131,6 +160,16 @@ public final class CycleService extends Service {
     @Nullable
     public String getToken() {
       return token;
+    }
+
+    @Override
+    public void addListener(Runnable r) {
+      listeners.add(r);
+    }
+
+    @Override
+    public void removeListener(Runnable r) {
+      listeners.remove(r);
     }
   };
 
