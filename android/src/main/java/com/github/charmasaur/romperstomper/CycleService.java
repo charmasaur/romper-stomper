@@ -1,5 +1,6 @@
 package com.github.charmasaur.romperstomper;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -23,6 +24,12 @@ public final class CycleService extends Service {
 
   @Nullable
   private String token;
+
+  public static  String[] REQUIRED_PERMISSIONS =
+      new String[] {
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_NETWORK_STATE,
+        Manifest.permission.INTERNET};
 
   public interface Binder {
     /** Don't call until permissions are granted. */

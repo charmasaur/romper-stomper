@@ -54,24 +54,19 @@ public class CycleActivity extends Activity {
       public void onClick(View view) {
         if (serviceBinder == null) {
           throw new RuntimeException("onClick called when not bound");
-        }
-        if (!havePermissions) {
-          throw new RuntimeException("Don't have permissions");
-        }
-        if (serviceBinder.isStarted()) {
+        } else if (!havePermissions) {
+          getOrUpdatePermissions();
+        } else if (serviceBinder.isStarted()) {
           serviceBinder.stop();
         } else {
           serviceBinder.start();
         }
-        invalidateOptionsMenu();
-        updateButtonText();
+        updateAll();
       }
     });
 
-    getPermission();
-
-    updateButtonEnabled();
-    updateButtonText();
+    getOrUpdatePermissions();
+    updateAll();
 
     if (!bindService(new Intent(this, CycleService.class), connection, BIND_AUTO_CREATE)) {
       throw new RuntimeException("Failed to bind to service");
@@ -109,24 +104,19 @@ public class CycleActivity extends Activity {
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grants) {
     Log.i(TAG, "Got result");
-    // TODO: Do this properly.
-    havePermissions = true;
+    havePermissions = checkThePermissions();
     updateAll();
   }
 
-  private void getPermission() {
-    String[] them = new String[] {Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.INTERNET};
-    if (checkThePermissions(them)) {
-      havePermissions = true;
-      updateAll();
-    } else {
-      ActivityCompat.requestPermissions(this, them, PERMISSION_CODE);
+  private void getOrUpdatePermissions() {
+    havePermissions = checkThePermissions();
+    if (!havePermissions) {
+      ActivityCompat.requestPermissions(this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
     }
   }
 
-  private boolean checkThePermissions(String [] its) {
-    for (String it : its) {
+  private boolean checkThePermissions() {
+    for (String it : CycleService.REQUIRED_PERMISSIONS) {
       if (ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED) {
         return false;
       }
@@ -145,7 +135,7 @@ public class CycleActivity extends Activity {
   }
 
   private void updateButtonEnabled() {
-    button.setEnabled(serviceBinder != null && havePermissions);
+    button.setEnabled(serviceBinder != null);
   }
 
   private static Intent getShareIntent(String token) {
