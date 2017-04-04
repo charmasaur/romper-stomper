@@ -2,9 +2,12 @@ package com.github.charmasaur.romperstomper;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -30,12 +33,10 @@ public class CycleActivity extends Activity {
 
   private Button button;
   private ArrayAdapter<String> adapter;
-
-  private LocationRequester requester;
-  private Sender sender;
+  private boolean havePermissions;
 
   @Nullable
-  private String token;
+  private CycleService.Binder serviceBinder;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -48,25 +49,33 @@ public class CycleActivity extends Activity {
     adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1);
     ((ListView) findViewById(R.id.list)).setAdapter(adapter);
 
-    requester = new LocationRequester(this, requesterCallback);
-    sender = new Sender(this, senderCallback);
-
     button.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        if (token != null) {
-          stop();
+        if (serviceBinder == null) {
+          throw new RuntimeException("onClick called when not bound");
+        }
+        if (!havePermissions) {
+          throw new RuntimeException("Don't have permissions");
+        }
+        if (serviceBinder.isStarted()) {
+          serviceBinder.stop();
         } else {
-          start();
+          serviceBinder.start();
         }
         invalidateOptionsMenu();
         updateButtonText();
       }
     });
 
+    getPermission();
+
+    updateButtonEnabled();
     updateButtonText();
 
-    getPermission();
+    if (!bindService(new Intent(this, CycleService.class), connection, BIND_AUTO_CREATE)) {
+      throw new RuntimeException("Failed to bind to service");
+    }
   }
 
   @Override
@@ -79,7 +88,7 @@ public class CycleActivity extends Activity {
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case R.id.menu_share:
-        startActivity(Intent.createChooser(getShareIntent(), "Share via..."));
+        startActivity(Intent.createChooser(getShareIntent(serviceBinder.getToken()), "Share via..."));
         return true;
     }
     return super.onOptionsItemSelected(item);
@@ -87,61 +96,32 @@ public class CycleActivity extends Activity {
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
-    menu.findItem(R.id.menu_share).setVisible(token != null);
+    menu.findItem(R.id.menu_share).setVisible(serviceBinder != null && serviceBinder.isStarted());
     return super.onPrepareOptionsMenu(menu);
   }
 
   @Override
   public void onDestroy() {
-    if (token != null) {
-      stop();
-    }
-    requester.destroy();
+    unbindService(connection);
     super.onDestroy();
   }
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grants) {
     Log.i(TAG, "Got result");
-    requester.onPermissions();
-  }
-
-  private void start() {
-    if (token != null) {
-      throw new RuntimeException("Started when started");
-    }
-    token = newToken();
-    CycleService.start(CycleActivity.this);
-    requester.go();
-  }
-
-  private void stop() {
-    if (token == null) {
-      throw new RuntimeException("Stopped when stopped");
-    }
-    requester.stop();
-    CycleService.stop(CycleActivity.this);
-    token = null;
-  }
-
-  private Intent getShareIntent() {
-    Intent intent = new Intent();
-    intent.setAction(Intent.ACTION_SEND);
-    intent.putExtra(Intent.EXTRA_SUBJECT, "Follow my progress at...");
-    intent.putExtra(
-        Intent.EXTRA_TEXT,
-        "Follow my progress at http://romper-stomper.appspot.com/cycler?token=" + token);
-    intent.setType("text/plain");
-    return intent;
+    // TODO: Do this properly.
+    havePermissions = true;
+    updateAll();
   }
 
   private void getPermission() {
     String[] them = new String[] {Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.INTERNET};
-    if (!checkThePermissions(them)) {
-      ActivityCompat.requestPermissions(this, them, PERMISSION_CODE);
+    if (checkThePermissions(them)) {
+      havePermissions = true;
+      updateAll();
     } else {
-      requester.onPermissions();
+      ActivityCompat.requestPermissions(this, them, PERMISSION_CODE);
     }
   }
 
@@ -155,36 +135,48 @@ public class CycleActivity extends Activity {
   }
 
   private void updateButtonText() {
-    button.setText(token == null ? "Start" : "Stop");
+    if (serviceBinder == null) {
+      button.setText("Loading...");
+    } else if (!havePermissions) {
+      button.setText("Waiting for permissions...");
+    } else {
+      button.setText(serviceBinder.isStarted() ? "Stop" : "Start");
+    }
   }
 
-  private static String newToken() {
-    byte[] randomBytes = new byte[12];
-    new SecureRandom().nextBytes(randomBytes);
-    // Use NO_WRAP since otherwise this won't get saved correctly to shared preferences (if we ever
-    // wanted to do that).
-    return Base64.encodeToString(randomBytes, Base64.URL_SAFE | Base64.NO_WRAP);
+  private void updateButtonEnabled() {
+    button.setEnabled(serviceBinder != null && havePermissions);
   }
 
-  private final Sender.Callback senderCallback = new Sender.Callback() {
+  private static Intent getShareIntent(String token) {
+    Intent intent = new Intent();
+    intent.setAction(Intent.ACTION_SEND);
+    intent.putExtra(Intent.EXTRA_SUBJECT, "Follow my progress at...");
+    intent.putExtra(
+        Intent.EXTRA_TEXT,
+        "Follow my progress at http://romper-stomper.appspot.com/cycler?token=" + token);
+    intent.setType("text/plain");
+    return intent;
+  }
+
+  private void updateAll() {
+    updateButtonText();
+    updateButtonEnabled();
+    invalidateOptionsMenu();
+  }
+
+
+  private final ServiceConnection connection = new ServiceConnection() {
     @Override
-    public void onResults(List<String> results) {
+    public void onServiceConnected(ComponentName className, IBinder binder) {
+      serviceBinder = (CycleService.Binder) binder;
+      updateAll();
     }
 
     @Override
-    public void onStatus(String status) {
-      adapter.add("Status: " + status);
-    }
-  };
-
-  private final LocationRequester.Callback requesterCallback = new LocationRequester.Callback() {
-    @Override
-    public void onLocation(double lat, double lng, double acc, long time) {
-      SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-      sdf.setTimeZone(TimeZone.getDefault());
-      String ts = sdf.format(new Date(time * 1000));
-      adapter.add("(" + lat + "," + lng + ")" + " at " + ts);
-      sender.sendCycle(lat, lng, time, token);
+    public void onServiceDisconnected(ComponentName className) {
+      serviceBinder = null;
+      updateAll();
     }
   };
 }
