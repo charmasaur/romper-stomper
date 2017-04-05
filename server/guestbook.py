@@ -207,12 +207,24 @@ class Cycler(webapp2.RequestHandler):
         if not token:
             self.response.write("You need to provide a token")
             return
-        template = JINJA_ENVIRONMENT.get_template('cycle.html')
+        native = self.request.get('native', '')
+
         path = ndb.Key(CyclePath, token).get()
-        if path == None:
-            self.response.write("Don't have any points yet, try again later")
+
+        if native:
+            if path == None:
+                self.response.write("")
+                return
+            self.response.write(path.point_list)
             return
-        self.response.write(template.render({'list' : path.point_list, 'API_KEY' : get_api_key()}))
+        else:
+            if path == None:
+                self.response.write("Don't have any points yet, try again later")
+                return
+            template = JINJA_ENVIRONMENT.get_template('cycle.html')
+            self.response.write(template.render(
+                {'list' : path.point_list, 'API_KEY' : get_api_key()}))
+            return
 
 class CycleSubmit(webapp2.RequestHandler):
     def get(self):
