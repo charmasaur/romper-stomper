@@ -38,12 +38,7 @@
         <activity
             android:name=".CycleMapActivity"
             android:label="@string/cycle_map_activity_name"
-            android:launchMode="standard"
-            android:taskAffinity="com.github.charmasaur.rompercyclermap">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
