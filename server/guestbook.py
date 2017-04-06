@@ -215,7 +215,7 @@ class Cycler(webapp2.RequestHandler):
             if path == None:
                 self.response.write("")
                 return
-            self.response.write(path.point_list)
+            self.response.write([[lat, lng, stamp] for (lat, lng, _, stamp) in path.point_list])
             return
         else:
             if path == None:
