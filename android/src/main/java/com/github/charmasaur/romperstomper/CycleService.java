@@ -65,7 +65,7 @@ public final class CycleService extends Service {
     super.onCreate();
     Log.i(TAG, "onCreate");
     locationRequester = new LocationRequester(this, locationRequesterCallback);
-    sender = new Sender(this, senderCallback);
+    sender = new Sender(this);
   }
 
   @Override
@@ -145,14 +145,6 @@ public final class CycleService extends Service {
       String ts = sdf.format(new Date(time * 1000));
       sender.sendCycle(lat, lng, time, token);
     }
-  };
-
-  private final Sender.Callback senderCallback = new Sender.Callback() {
-    @Override
-    public void onResults(List<String> results) {}
-
-    @Override
-    public void onStatus(String status) {}
   };
 
   private final android.os.Binder binder = new BinderImpl();
