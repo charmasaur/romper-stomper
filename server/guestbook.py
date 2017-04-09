@@ -20,6 +20,13 @@ earth_radius = 6371000
 distance_threshold = 100
 identical_lift_distance_threshold = 10
 
+class CyclePoint(ndb.Model):
+    lat = ndb.FloatProperty(indexed=False)
+    lng = ndb.FloatProperty(indexed=False)
+    time = ndb.StringProperty(indexed=False)
+
+class CyclePath(ndb.Model):
+    point_list = ndb.JsonProperty(indexed=False)
 
 class Fellow(ndb.Model):
     last_lift = ndb.StringProperty(indexed=False)
@@ -131,6 +138,7 @@ class Here(webapp2.RequestHandler):
             # Save this fellow.
             fellow.put()
 
+
         lifters = Lift.query().fetch(100)
         if current_lift_name:
             self.response.write("You are at: " + current_lift_name + "|")
@@ -183,9 +191,74 @@ class ListLifts(webapp2.RequestHandler):
         self.response.write(template.render({'list' : tuples, 'API_KEY' : get_api_key()}))
 
 
+class DeprecatedCycle(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('cycle.html')
+        cycles = CyclePoint.query().fetch(600)
+        tuples = []
+        for cycle in cycles:
+            tuples.append((cycle.lat, cycle.lng, cycle.time))
+        self.response.write(template.render({'list' : tuples, 'API_KEY' : get_api_key()}))
+
+
+class Cycler(webapp2.RequestHandler):
+    def get(self):
+        token = self.request.get('token', '')
+        if not token:
+            self.response.write("You need to provide a token")
+            return
+        native = self.request.get('native', '')
+
+        path = ndb.Key(CyclePath, token).get()
+
+        if native:
+            if path == None:
+                self.response.write("")
+                return
+            self.response.write([[lat, lng, stamp] for (lat, lng, _, stamp) in path.point_list])
+            return
+        else:
+            if path == None:
+                self.response.write("Don't have any points yet, try again later")
+                return
+            template = JINJA_ENVIRONMENT.get_template('cycle.html')
+            self.response.write(template.render(
+                {'list' : path.point_list, 'API_KEY' : get_api_key()}))
+            return
+
+class CycleSubmit(webapp2.RequestHandler):
+    def get(self):
+        token = self.request.get('token', '')
+        lat = float(self.request.get('lat', '0.0'))
+        lng = float(self.request.get('lng', '0.0'))
+        acc = float(self.request.get('acc', '0.0'))
+        # tim is UTC seconds
+        tim = int(self.request.get('tim', '0'))
+
+        if lat == 0.0 and lng == 0.0:
+            return
+
+        path = ndb.Key(CyclePath, token).get()
+        if path == None:
+            path = CyclePath(id=token)
+            path.point_list = []
+        # we assume the list is already sorted (in increasing order of time), so to keep it that
+        # way we just need to look backwards through the list until we find something not bigger
+        # than the new value (and then insert the new value after that element)
+        index = len(path.point_list) - 1
+        while index >= 0:
+            if len(path.point_list[index]) < 4 or path.point_list[index][3] <= tim:
+                break
+            index = index - 1
+        path.point_list.insert(index + 1, (lat, lng, time.ctime(tim + 11 * 60 * 60), tim))
+        path.put()
+
 app = webapp2.WSGIApplication([
     ('/here', Here),
     ('/add', Add),
     ('/add_internal', AddInternal),
     ('/list_lifts', ListLifts),
+    ('/cycle', DeprecatedCycle),
+    ('/cycler', Cycler),
+    ('/cycle_submit', CycleSubmit),
 ], debug=True)

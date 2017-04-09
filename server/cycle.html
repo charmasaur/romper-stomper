@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html>
+  <head>
+    <style>
+    html, body, #map {
+      width: 100%;
+      height: 100%;
+    }
+    input {
+      font-size: 200%
+    }
+    #over_map {
+      position: absolute;
+      text-align: center;
+      width: 100%;
+      top: 10px;
+      z-index: 99;
+    }
+    </style>
+  </head>
+  </head>
+  <body>
+    <div id='map'></div>
+    <div id='over_map'><input type="button" value="Refresh" onClick="window.location.reload()"></div>
+    <script>
+      function initMap() {
+        var mapDiv = document.getElementById('map');
+        var map = new google.maps.Map(mapDiv, {
+            center: {lat: -33.8688, lng: 151.2093},
+            zoom: 13
+        });
+
+        var coords = [];
+        var lastinfo;
+        var lastmarker;
+
+        {% for tuple in list %}
+        var marker = new google.maps.Marker({
+          map: map,
+          position: {lat: {{tuple.0}}, lng: {{tuple.1}}}
+        });
+        var info = new google.maps.InfoWindow({
+          content: '{{tuple.2}}'
+        });
+        var dispfunc = function(mark, inf) {
+          inf.open(map, mark);
+        };
+        marker.addListener('click', (function(mark, inf) {
+          inf.open(map, mark);
+        }).bind(this, marker, info));
+        coords.push({lat: {{tuple.0}}, lng: {{tuple.1}}});
+        lastinfo = info;
+        lastmarker = marker;
+        {% endfor %}
+
+        if (coords.length > 0) {
+          map.setCenter(coords[coords.length - 1]);
+          info.open(map, marker);
+        }
+        var path = new google.maps.Polyline({
+          map: map,
+          path: coords,
+          geodesic: true,
+          strokeColor: '#0000FF',
+          strokeOpacity: 1.0,
+          strokeWeight: 2
+        });
+      }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ API_KEY }}&callback=initMap"
+  type="text/javascript"></script>
+  </body>
+</html>
+{% endautoescape %}
