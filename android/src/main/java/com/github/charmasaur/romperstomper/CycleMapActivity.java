@@ -30,6 +30,8 @@ public class CycleMapActivity extends FragmentActivity {
 
   @Nullable private Toast toast;
 
+  private boolean hasSetInitialViewport;
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -41,12 +43,12 @@ public class CycleMapActivity extends FragmentActivity {
       getIntent().getData().buildUpon().appendQueryParameter("native", "true").build().toString();
     fetcher = new CycleMapFetcher(this, url, fetcherCallback);
     Log.i(TAG, "Created CycleMapActivity with URL: " + url);
+    refresh();
   }
 
   @Override
   public void onStart() {
     super.onStart();
-    refresh();
   }
 
   @Override
@@ -83,9 +85,10 @@ public class CycleMapActivity extends FragmentActivity {
     LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
     PolylineOptions options = new PolylineOptions();
     LatLng prev = null;
+    Marker lastMarker = null;
     for (CycleMapFetcher.MarkerInfo marker : markers) {
       LatLng latLng = new LatLng(marker.lat, marker.lng);
-      googleMap.addMarker(
+      lastMarker = googleMap.addMarker(
           new MarkerOptions()
               .position(latLng)
               .title(formatTimestamp(marker.timestamp)));
@@ -96,7 +99,13 @@ public class CycleMapActivity extends FragmentActivity {
       prev = latLng;
     }
     googleMap.addPolyline(options);
-    googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+    if (!hasSetInitialViewport) {
+      googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+      hasSetInitialViewport = true;
+    }
+    if (lastMarker != null) {
+      lastMarker.showInfoWindow();
+    }
   }
 
   private String formatTimestamp(long timestamp) {
