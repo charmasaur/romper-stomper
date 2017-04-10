@@ -1,6 +1,7 @@
 package com.github.charmasaur.romperstomper;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -35,18 +36,22 @@ public class CycleMapFetcher {
   }
 
   private final Callback callback;
-  private final String url;
   private final RequestQueue queue;
 
-  public CycleMapFetcher(Context context, String url, Callback callback) {
-    this.url = url;
+  @Nullable private StringRequest lastRequest;
+
+  public CycleMapFetcher(Context context, Callback callback) {
     this.callback = callback;
 
     queue = Volley.newRequestQueue(context);
   }
 
-  public void fetch() {
-    StringRequest stringRequest = new StringRequest(
+  public void fetch(String url) {
+    if (lastRequest != null) {
+      lastRequest.cancel();
+      lastRequest = null;
+    }
+    lastRequest = new StringRequest(
         Request.Method.GET,
         url,
         new Response.Listener<String>() {
@@ -64,7 +69,7 @@ public class CycleMapFetcher {
           }
         });
     // Add the request to the RequestQueue.
-    queue.add(stringRequest);
+    queue.add(lastRequest);
   }
 
   private void parseResponse(String r) {

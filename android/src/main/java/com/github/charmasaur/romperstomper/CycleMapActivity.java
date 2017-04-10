@@ -1,6 +1,7 @@
 package com.github.charmasaur.romperstomper;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
@@ -27,8 +28,8 @@ public class CycleMapActivity extends FragmentActivity {
   private CycleMapFetcher fetcher;
   @Nullable private GoogleMap googleMap;
   @Nullable private List<CycleMapFetcher.MarkerInfo> markers;
-
   @Nullable private Toast toast;
+  @Nullable private String url;
 
   private boolean hasSetInitialViewport;
 
@@ -39,11 +40,8 @@ public class CycleMapActivity extends FragmentActivity {
     SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager()
       .findFragmentById(R.id.map_fragment);
     fragment.getMapAsync(onMapReadyCallback);
-    String url =
-      getIntent().getData().buildUpon().appendQueryParameter("native", "true").build().toString();
-    fetcher = new CycleMapFetcher(this, url, fetcherCallback);
-    Log.i(TAG, "Created CycleMapActivity with URL: " + url);
-    refresh();
+    fetcher = new CycleMapFetcher(this, fetcherCallback);
+    handleIntent();
   }
 
   @Override
@@ -68,12 +66,29 @@ public class CycleMapActivity extends FragmentActivity {
   }
 
   @Override
+  public void onNewIntent(Intent intent) {
+    setIntent(intent);
+    handleIntent();
+  }
+
+  @Override
   public void onDestroy() {
     super.onDestroy();
   }
 
+  private void handleIntent() {
+    url =
+      getIntent().getData().buildUpon().appendQueryParameter("native", "true").build().toString();
+    hasSetInitialViewport = false;
+    markers = null;
+    if (googleMap != null) {
+      googleMap.clear();
+    }
+    refresh();
+  }
+
   private void refresh() {
-    fetcher.fetch();
+    fetcher.fetch(url);
     toast("Fetching");
   }
 
