@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg4558"
+   inkscape:version="0.92.1 r"
+   sodipodi:docname="boot_compass.svg"
+   inkscape:export-filename="/home/harry/romper-stomper/android/src/main/res/drawable-xxhdpi/launcher.png"
+   inkscape:export-xdpi="43.772858"
+   inkscape:export-ydpi="43.772858">
+  <defs
+     id="defs4552" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="324.29148"
+     inkscape:cy="280.97081"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1916"
+     inkscape:window-height="1041"
+     inkscape:window-x="0"
+     inkscape:window-y="18"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata4555">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-197)">
+    <circle
+       style="fill:#000080;stroke:none;stroke-width:1.76807404;stroke-miterlimit:4;stroke-dasharray:none"
+       id="path4564"
+       cx="49.639217"
+       cy="247.38246"
+       r="41.779312"
+       inkscape:export-filename="/home/harry/romper-stomper/android/src/main/res/drawable-xxhdpi/launcher.png"
+       inkscape:export-xdpi="43.77"
+       inkscape:export-ydpi="43.77" />
+    <path
+       style="fill:#008000;fill-rule:evenodd;stroke:none;stroke-width:0.28660995px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 29.867165,274.4628 c 2.05295,1.32449 53.398014,-9.22034 53.561161,-11.5808 0.177169,-2.56324 -2.605677,-13.60743 -12.88363,-12.59412 -10.277951,1.01333 -14.09373,6.02097 -23.730335,-0.63171 -9.658492,-6.66779 -10.232029,-24.40399 -12.19797,-25.71458 -2.553087,-1.70201 -14.952352,1.73954 -15.606221,3.76376 -0.925812,2.86609 8.81722,45.44144 10.856995,46.75745 z"
+       id="path3682"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="sscssss" />
+    <g
+       id="g4678"
+       transform="matrix(4.3785421,0.83710209,-0.83710209,4.3785421,37.82485,-817.02289)">
+      <path
+         sodipodi:nodetypes="sccs"
+         inkscape:connector-curvature="0"
+         id="rect4654"
+         d="m 47.74102,225.09296 c 0.623458,-0.0316 1.114025,8.9896 1.114025,8.9896 h -2.22805 c 0,0 0.481283,-8.95757 1.114025,-8.9896 z"
+         style="fill:#ff0000;stroke:none;stroke-width:0.15569343" />
+      <path
+         sodipodi:nodetypes="sccs"
+         inkscape:connector-curvature="0"
+         id="rect4654-5"
+         d="m 47.74102,243.07216 c 0.621311,0.0494 1.114025,-8.9896 1.114025,-8.9896 h -2.22805 c 0,0 0.476744,8.93895 1.114025,8.9896 z"
+         style="fill:#ffffff;stroke:none;stroke-width:0.15569343" />
+    </g>
+  </g>
+</svg>
