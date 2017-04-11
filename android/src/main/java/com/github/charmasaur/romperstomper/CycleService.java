@@ -44,6 +44,9 @@ public final class CycleService extends Service {
   @Nullable
   private String token;
 
+  /**
+   * These must be granted before starting or binding to the service.
+   */
   public static  String[] REQUIRED_PERMISSIONS =
       new String[] {
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -97,8 +100,6 @@ public final class CycleService extends Service {
       return;
     }
     token = newToken();
-    // TODO: Handle permissions properly.
-    locationRequester.onPermissions();
     locationRequester.go();
     startForeground(1, new NotificationCompat.Builder(this)
         .setContentTitle("Romping")

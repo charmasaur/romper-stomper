@@ -22,9 +22,7 @@ public class LocationRequester {
   private final GoogleApiClient client;
   private final Context context;
   private final Callback callback;
-
-  @Nullable
-  private LocationRequest request;
+  private final LocationRequest request;
 
   private boolean isConnected;
   private boolean going;
@@ -40,18 +38,15 @@ public class LocationRequester {
         .addApi(LocationServices.API)
         .build();
     client.connect();
-  }
 
-  public void destroy() {
-    client.disconnect();
-  }
-
-  public void onPermissions() {
-    Log.i(TAG, "Setting request");
     request = new LocationRequest();
     request.setInterval(INTERVAL_MS);
     request.setFastestInterval((long)((float)INTERVAL_MS * 0.9f));
     request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+  }
+
+  public void destroy() {
+    client.disconnect();
   }
 
   public void go() {
@@ -65,7 +60,7 @@ public class LocationRequester {
   }
 
   private void maybeDo() {
-    boolean shouldRequesting = isConnected && request != null && going;
+    boolean shouldRequesting = isConnected && going;
     if (requesting && !shouldRequesting) {
       Log.i(TAG, "Undoing it");
       LocationServices.FusedLocationApi.removeLocationUpdates(client, locationListener);
