@@ -22,7 +22,6 @@ public class LocationRequester {
   private final GoogleApiClient client;
   private final Context context;
   private final Callback callback;
-  private final LocationRequest request;
 
   private boolean isConnected;
   private boolean going;
@@ -38,11 +37,6 @@ public class LocationRequester {
         .addApi(LocationServices.API)
         .build();
     client.connect();
-
-    request = new LocationRequest();
-    request.setInterval(INTERVAL_MS);
-    request.setFastestInterval((long)((float)INTERVAL_MS * 0.9f));
-    request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
   }
 
   public void destroy() {
@@ -67,6 +61,11 @@ public class LocationRequester {
       requesting = false;
     } else if (!requesting && shouldRequesting) {
       Log.i(TAG, "Doing it");
+
+      LocationRequest request = new LocationRequest();
+      request.setInterval(INTERVAL_MS);
+      request.setFastestInterval((long)((float)INTERVAL_MS * 0.9f));
+      request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
       LocationServices.FusedLocationApi.requestLocationUpdates(client, request, locationListener);
       requesting = true;
     }
