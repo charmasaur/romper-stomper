@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.1 r"
+   sodipodi:docname="foot_compass.svg"
+   inkscape:export-filename="/home/harry/romper-stomper/android/src/main/res/drawable-xxhdpi/launcher.png"
+   inkscape:export-xdpi="36.576"
+   inkscape:export-ydpi="36.576">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="-80.5763"
+     inkscape:cy="207.2704"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1916"
+     inkscape:window-height="1041"
+     inkscape:window-x="0"
+     inkscape:window-y="18"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-197)">
+    <path
+       style="fill:#000000;fill-rule:evenodd;stroke:none;stroke-width:0.43416685px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 70.155944,220.84186 c -2.333312,-5.50845 -10.755103,-8.45578 -16.545382,-6.95246 -6.43165,1.66984 -11.260271,9.12448 -12.300095,15.68748 -1.453381,9.17317 3.276519,21.27966 -2.928962,25.7694 -6.205496,4.48978 -18.831421,13.2446 -17.677171,20.62353 1.15425,7.37892 4.019179,10.59514 10.394424,11.80817 8.233769,1.56666 17.825917,-8.69146 20.902006,-20.35547 3.076085,-11.66399 24.655003,-31.23596 18.15518,-46.58065 z"
+       id="path12"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="aasscssa" />
+    <circle
+       id="path14"
+       cx="168.19345"
+       cy="166.13666"
+       r="1.4111205"
+       style="fill:#ff0000;stroke-width:0.20795459"
+       transform="rotate(27.031482)" />
+    <circle
+       id="path16"
+       cx="164.48782"
+       cy="161.40018"
+       r="2.3963001"
+       style="fill:#ff0000;stroke-width:0.26838559"
+       transform="rotate(27.031482)" />
+    <circle
+       id="path18"
+       cx="157.2484"
+       cy="158.35649"
+       r="3.1699841"
+       style="fill:#ff0000;stroke-width:0.24655432"
+       transform="rotate(27.031482)" />
+    <circle
+       id="path20"
+       cx="148.6537"
+       cy="158.6834"
+       r="3.7775888"
+       style="fill:#ff0000;stroke-width:0.19957073"
+       transform="rotate(27.031482)" />
+    <circle
+       id="path22"
+       cx="138.42778"
+       cy="162.93401"
+       r="5.1153531"
+       style="fill:#ff0000;stroke-width:0.36725608"
+       transform="rotate(27.031482)" />
+  </g>
+</svg>
