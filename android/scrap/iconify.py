@@ -1,17 +1,22 @@
 import sys
 from subprocess import call
 
-if not len(sys.argv) == 2:
-    print("Usage: python iconify.py <filename>")
+if len(sys.argv) < 2 or len(sys.argv) > 3:
+    print("Usage: python iconify.py <filename> [name]")
     sys.exit(1)
 
 filename = str(sys.argv[1])
-first_part = filename.split(".")[0]
+if len(sys.argv) == 3:
+    output = str(sys.argv[2])
+else:
+    output = filename.split(".")[0]
 
-sizes = [36, 48, 72, 96, 144, 192, 512]
+sizes = [("l", 36), ("m", 48), ("h", 72), ("xh", 96), ("xxh", 144), ("xxxh", 192), ("Z", 512)]
 
-for s in sizes:
-    output_filename = first_part + "_" + str(s) + ".png"
+for (n, s) in sizes:
+    d = "mipmap-" + n + "dpi"
+    call(["mkdir", "-p", d])
+    output_filename = d + "/" + output + ".png"
     call(["inkscape",
         "--export-png=" + output_filename,
         "--export-area-page",
