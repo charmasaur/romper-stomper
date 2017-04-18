@@ -17,9 +17,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.util.Date;
@@ -32,7 +30,6 @@ public class CycleActivity extends Activity {
   private static final int PERMISSION_CODE = 1338;
 
   private Button button;
-  private ArrayAdapter<String> adapter;
   private boolean havePermissions;
 
   @Nullable
@@ -46,8 +43,6 @@ public class CycleActivity extends Activity {
     setContentView(R.layout.activity_cycle);
 
     button = (Button) findViewById(R.id.start_stop_button);
-    adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1);
-    ((ListView) findViewById(R.id.list)).setAdapter(adapter);
 
     button.setOnClickListener(new View.OnClickListener() {
       @Override
