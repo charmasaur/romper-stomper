@@ -9,7 +9,7 @@
 
     <application
     android:label="Romper Stomper"
-    android:icon="@drawable/launcher">
+    android:icon="@mipmap/launcher">
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
