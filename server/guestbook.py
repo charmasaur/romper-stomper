@@ -116,7 +116,7 @@ class DumpAll(webapp2.RequestHandler):
     def get(self):
         query = CyclePath.query()
 
-        self.response.write([str(result.point_list) for result in query.fetch(5)])
+        self.response.write([str(result.point_list) for result in query.fetch()])
 
 app = webapp2.WSGIApplication([
     ('/cycler', Cycler),
