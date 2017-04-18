@@ -1,0 +1,4 @@
+cron:
+- description: "monthly cleanup"
+  url: /remove_expired
+  schedule: 1 of month 00:00

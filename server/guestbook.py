@@ -7,14 +7,18 @@ from google.appengine.ext import ndb
 import time
 import jinja2
 import webapp2
+import datetime
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
+EXPIRY_TIME = datetime.timedelta(days=30)
+
 class CyclePath(ndb.Model):
     point_list = ndb.JsonProperty(indexed=False)
+    expiry_date = ndb.DateTimeProperty(indexed=True)
 
 def get_api_key():
     f = open('api_key.txt', 'r')
@@ -62,6 +66,7 @@ class CycleSubmit(webapp2.RequestHandler):
         if path == None:
             path = CyclePath(id=token)
             path.point_list = []
+            path.expiry_date = datetime.datetime.today() + EXPIRY_TIME
         # we assume the list is already sorted (in increasing order of time), so to keep it that
         # way we just need to look backwards through the list until we find something not bigger
         # than the new value (and then insert the new value after that element)
@@ -73,7 +78,29 @@ class CycleSubmit(webapp2.RequestHandler):
         path.point_list.insert(index + 1, (lat, lng, time.ctime(tim + 11 * 60 * 60), tim))
         path.put()
 
+class RemoveExpired(webapp2.RequestHandler):
+    def get(self):
+        date = datetime.datetime.today()
+        query = CyclePath.query(
+                CyclePath.expiry_date != None,
+                CyclePath.expiry_date < date)
+
+        ndb.delete_multi(query.iter(keys_only=True))
+        self.response.write("Deleted " + str(query.count()) + " entries");
+
+class List(webapp2.RequestHandler):
+    def get(self):
+        query = CyclePath.query().order(-CyclePath.expiry_date)
+
+        response = ""
+        for result in query.iter():
+            response += ("<a href=\"http://localhost:8080/cycler?token=" + result.key.id() + "\">"
+                    + result.key.id() + " " + str(result.expiry_date) + "</a><br>")
+        self.response.write(response)
+
 app = webapp2.WSGIApplication([
     ('/cycler', Cycler),
     ('/cycle_submit', CycleSubmit),
+    ('/remove_expired', RemoveExpired),
+    ('/list', List),
 ], debug=True)
