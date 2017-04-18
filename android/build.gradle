@@ -28,8 +28,8 @@ android {
     applicationId "${rootAppId}"
     minSdkVersion 14
     targetSdkVersion 23
-    versionCode 1
-    versionName "0.1"
+    versionCode 10
+    versionName "1.0"
     resValue "string", "google_maps_key", (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
   }
   buildTypes {
