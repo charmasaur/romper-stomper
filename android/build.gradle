@@ -35,25 +35,18 @@ android {
   buildTypes {
     debug {
       def final suffix = ".debug"
+      resValue "string", "app_name", "Romper Stomper Debug"
+
+      applicationIdSuffix "${suffix}"
+      versionNameSuffix "${suffix}"
+    }
+    release {
+      def final suffix = ""
       resValue "string", "app_name", "Romper Stomper"
 
       applicationIdSuffix "${suffix}"
       versionNameSuffix "${suffix}"
     }
-    //release {
-    //  def final suffix = ""
-    //  resValue "string", "app_name", "Australian Alps Insects"
-
-    //  applicationIdSuffix "${suffix}"
-    //  versionNameSuffix "${suffix}"
-
-    //  buildConfigField "String", "CONTENT_PROVIDER_AUTHORITY", "\"${getContentProviderAuthority(suffix)}\""
-    //  buildConfigField "String", "ASSETS_PROVIDER_AUTHORITY", "\"${getAssetsProviderAuthority(suffix)}\""
-
-    //  resValue "string", "content_provider_authority", "${getContentProviderAuthority(suffix)}"
-    //  resValue "string", "assets_provider_authority", "${getAssetsProviderAuthority(suffix)}"
-    //  resValue "string", "suggest_intent_data", "${getSearchSuggestIntentData(suffix)}"
-    //}
   }
 }
 
