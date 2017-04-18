@@ -50,6 +50,20 @@ class Cycler(webapp2.RequestHandler):
                 {'list' : path.point_list, 'API_KEY' : get_api_key()}))
             return
 
+class Dump(webapp2.RequestHandler):
+    def get(self):
+        token = self.request.get('token', '')
+        if not token:
+            self.response.write("You need to provide a token")
+            return
+
+        path = ndb.Key(CyclePath, token).get()
+
+        if path == None:
+            self.response.write("Don't have any points yet, try again later")
+            return
+        self.response.write(path.point_list)
+
 class CycleSubmit(webapp2.RequestHandler):
     def get(self):
         token = self.request.get('token', '')
@@ -98,9 +112,17 @@ class List(webapp2.RequestHandler):
                     + result.key.id() + " " + str(result.expiry_date) + "</a><br>")
         self.response.write(response)
 
+class DumpAll(webapp2.RequestHandler):
+    def get(self):
+        query = CyclePath.query()
+
+        self.response.write([str(result.point_list) for result in query.fetch(5)])
+
 app = webapp2.WSGIApplication([
     ('/cycler', Cycler),
+    ('/dump', Dump),
     ('/cycle_submit', CycleSubmit),
     ('/remove_expired', RemoveExpired),
     ('/list', List),
+    ('/dump_all', DumpAll),
 ], debug=True)

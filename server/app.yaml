@@ -10,6 +10,9 @@ handlers:
 - url: /list
   script: guestbook.app
   login: admin
+- url: /dump_all
+  script: guestbook.app
+  login: admin
 - url: /.*
   script: guestbook.app
 # [END handlers]
