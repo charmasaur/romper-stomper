@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <application
-    android:label="Romper Stomper"
+    android:label="@string/application_name"
     android:icon="@mipmap/launcher">
         <meta-data
             android:name="com.google.android.gms.version"

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="cycle_activity_name">Romper Stomper</string>
+    <string name="application_name">@string/app_name</string>
+    <string name="cycle_activity_name">@string/app_name</string>
     <string name="cycle_map_activity_name">Romper Tracker</string>
 </resources>
