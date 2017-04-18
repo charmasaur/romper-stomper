@@ -38,7 +38,9 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:host="romper-stomper.appspot.com" />
+                <data
+                    android:host="romper-stomper.appspot.com"
+                    android:pathPrefix="/cycler"/>
             </intent-filter>
         </activity>
         <service
