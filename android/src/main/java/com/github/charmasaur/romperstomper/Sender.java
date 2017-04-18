@@ -14,7 +14,6 @@ public class Sender {
   private static final String TAG = Sender.class.getSimpleName();
   private static final String SCHEME = "http";
   private static final String AUTHORITY = "romper-stomper.appspot.com";
-  private static final String PATH = "here";
   private static final String CYCLE_PATH = "cycle_submit";
 
   private final RequestQueue queue;
