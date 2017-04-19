@@ -29,6 +29,7 @@
         <activity
             android:name=".CycleMapActivity"
             android:label="@string/cycle_map_activity_name"
+            android:launchMode="standard"
             android:documentLaunchMode="intoExisting">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
