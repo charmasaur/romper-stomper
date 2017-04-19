@@ -19,9 +19,7 @@
 
         <activity
             android:name=".CycleActivity"
-            android:label="@string/cycle_activity_name"
-            android:launchMode="singleTop"
-            android:taskAffinity="com.github.charmasaur.rompercycler">
+            android:label="@string/cycle_activity_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -31,7 +29,7 @@
         <activity
             android:name=".CycleMapActivity"
             android:label="@string/cycle_map_activity_name"
-            android:launchMode="singleTask">
+            android:documentLaunchMode="intoExisting">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
