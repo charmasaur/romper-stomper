@@ -77,6 +77,10 @@ public class CycleMapActivity extends FragmentActivity {
   }
 
   private void handleIntent() {
+    if (getIntent().getData() == null) {
+      return;
+    }
+
     url =
       getIntent().getData().buildUpon().appendQueryParameter("native", "true").build().toString();
     hasSetInitialViewport = false;
