@@ -40,8 +40,18 @@
           map: map,
           position: {lat: {{tuple.0}}, lng: {{tuple.1}}}
         });
+        function pad_int(x) {
+          return x < 10 ? "0" + x : x;
+        }
+        var date = new Date({{tuple.3}} * 1000);
+        var h = pad_int(date.getHours());
+        var m = pad_int(date.getMinutes());
+        var s = pad_int(date.getSeconds());
+        var D = pad_int(date.getDate());
+        var M = pad_int(date.getMonth() + 1);
+        var Y = date.getFullYear();
         var info = new google.maps.InfoWindow({
-          content: '{{tuple.2}}'
+          content: h + ":" + m + ":" + s + " " + D + "-" + M + "-" + Y
         });
         var dispfunc = function(mark, inf) {
           inf.open(map, mark);
