@@ -144,7 +144,7 @@ public final class CycleService extends Service {
       SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
       sdf.setTimeZone(TimeZone.getDefault());
       String ts = sdf.format(new Date(time * 1000));
-      sender.sendCycle(lat, lng, time, token);
+      //sender.sendCycle(lat, lng, time, token);
     }
   };
 

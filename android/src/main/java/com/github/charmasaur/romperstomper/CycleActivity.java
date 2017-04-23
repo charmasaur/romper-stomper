@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -14,8 +15,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Base64;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import java.security.SecureRandom;
@@ -30,6 +29,9 @@ public class CycleActivity extends Activity {
   private static final int PERMISSION_CODE = 1338;
 
   private Button button;
+  private Button stopButton;
+  private Button shareButton;
+  private Button showButton;
   private boolean havePermissions;
 
   @Nullable
@@ -43,19 +45,60 @@ public class CycleActivity extends Activity {
     setContentView(R.layout.activity_cycle);
 
     button = (Button) findViewById(R.id.start_stop_button);
+    stopButton = (Button) findViewById(R.id.stop_button);
+    shareButton = (Button) findViewById(R.id.share_button);
+    showButton = (Button) findViewById(R.id.show_button);
 
     button.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
         if (serviceBinder == null) {
-          throw new RuntimeException("onClick called when not bound");
+          throw new RuntimeException("Start button clicked when not bound");
         } else if (!havePermissions) {
           getPermissions();
         } else if (serviceBinder.isStarted()) {
-          serviceBinder.stop();
+          throw new RuntimeException("Start button clicked when started");
         } else {
           serviceBinder.start();
         }
+      }
+    });
+
+    stopButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        if (serviceBinder == null) {
+          throw new RuntimeException("Stop button clicked when not bound");
+        } else if (!serviceBinder.isStarted()) {
+          throw new RuntimeException("Stop button clicked when not started");
+        } else {
+          serviceBinder.stop();
+        }
+      }
+    });
+
+    shareButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        if (serviceBinder == null) {
+          throw new RuntimeException("Share button clicked when not bound");
+        } else if (!serviceBinder.isStarted()) {
+          throw new RuntimeException("Share button clicked when not started");
+        }
+        startActivity(
+            Intent.createChooser(getShareIntent(serviceBinder.getToken()), "Share via..."));
+      }
+    });
+
+    showButton.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        if (serviceBinder == null) {
+          throw new RuntimeException("Show button clicked when not bound");
+        } else if (!serviceBinder.isStarted()) {
+          throw new RuntimeException("Show button clicked when not started");
+        }
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getUrl(serviceBinder.getToken()))));
       }
     });
 
@@ -68,28 +111,6 @@ public class CycleActivity extends Activity {
     if (!bindService(new Intent(this, CycleService.class), connection, BIND_AUTO_CREATE)) {
       throw new RuntimeException("Failed to bind to service");
     }
-  }
-
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.activity_cycle, menu);
-    return true;
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menu_share:
-        startActivity(Intent.createChooser(getShareIntent(serviceBinder.getToken()), "Share via..."));
-        return true;
-    }
-    return super.onOptionsItemSelected(item);
-  }
-
-  @Override
-  public boolean onPrepareOptionsMenu(Menu menu) {
-    menu.findItem(R.id.menu_share).setVisible(serviceBinder != null && serviceBinder.isStarted());
-    return super.onPrepareOptionsMenu(menu);
   }
 
   @Override
@@ -127,29 +148,38 @@ public class CycleActivity extends Activity {
     } else if (!havePermissions) {
       button.setText("Waiting for permissions...");
     } else {
-      button.setText(serviceBinder.isStarted() ? "Stop" : "Start");
+      button.setText("Start");
     }
   }
 
   private void updateButtonEnabled() {
-    button.setEnabled(serviceBinder != null);
+    button.setEnabled(serviceBinder != null && !serviceBinder.isStarted());
+    stopButton.setEnabled(serviceBinder != null && serviceBinder.isStarted());
+  }
+
+  private void updateShareButtonEnabled() {
+    boolean enabled = serviceBinder != null && serviceBinder.isStarted();
+    shareButton.setEnabled(enabled);
+    showButton.setEnabled(enabled);
   }
 
   private static Intent getShareIntent(String token) {
     Intent intent = new Intent();
     intent.setAction(Intent.ACTION_SEND);
     intent.putExtra(Intent.EXTRA_SUBJECT, "Follow my progress at...");
-    intent.putExtra(
-        Intent.EXTRA_TEXT,
-        "Follow my progress at http://romper-stomper.appspot.com/cycler?token=" + token);
+    intent.putExtra(Intent.EXTRA_TEXT, "Follow my progress at " + getUrl(token));
     intent.setType("text/plain");
     return intent;
+  }
+
+  private static String getUrl(String token) {
+    return "http://romper-stomper.appspot.com/cycler?token=" + token;
   }
 
   private void updateAll() {
     updateButtonText();
     updateButtonEnabled();
-    invalidateOptionsMenu();
+    updateShareButtonEnabled();
   }
 
   private final Runnable binderListener = new Runnable() {
