@@ -29,8 +29,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.175"
-     inkscape:cx="2263.2634"
-     inkscape:cy="1328.7625"
+     inkscape:cx="3634.692"
+     inkscape:cy="414.47679"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -47,7 +47,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -58,19 +58,14 @@
      transform="translate(0,203)">
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:105.83333588px;line-height:125%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="498.55316"
-       y="9.7380896"
+       style="font-style:normal;font-weight:normal;font-size:211.66667175px;line-height:125%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="511.78253"
+       y="113.53035"
        id="text62"><tspan
          sodipodi:role="line"
-         id="tspan60"
-         x="498.55316"
-         y="9.7380896"
-         style="font-size:105.83333588px;text-align:center;text-anchor:middle;stroke-width:0.26458332px">ROMPER</tspan><tspan
-         sodipodi:role="line"
-         x="498.55316"
-         y="142.02975"
-         style="font-size:105.83333588px;text-align:center;text-anchor:middle;stroke-width:0.26458332px"
-         id="tspan64">STOMPER</tspan></text>
+         x="511.78253"
+         y="113.53035"
+         style="font-size:211.66667175px;text-align:center;text-anchor:middle;stroke-width:0.26458332px"
+         id="tspan64">ROMPER</tspan></text>
   </g>
 </svg>
