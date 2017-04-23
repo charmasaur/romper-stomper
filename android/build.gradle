@@ -35,14 +35,14 @@ android {
   buildTypes {
     debug {
       def final suffix = ".debug"
-      resValue "string", "app_name", "Romper Stomper Debug"
+      resValue "string", "app_name", "Romper Debug"
 
       applicationIdSuffix "${suffix}"
       versionNameSuffix "${suffix}"
     }
     release {
       def final suffix = ""
-      resValue "string", "app_name", "Romper Stomper"
+      resValue "string", "app_name", "Romper"
 
       applicationIdSuffix "${suffix}"
       versionNameSuffix "${suffix}"
