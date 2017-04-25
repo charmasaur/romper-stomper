@@ -34,6 +34,10 @@ public class CycleActivity extends Activity {
   private Button showButton;
   private boolean havePermissions;
 
+  // Valid iff serviceBinder is non-null.
+  @Nullable private String token;
+  private boolean started;
+
   @Nullable
   private CycleService.Binder serviceBinder;
 
@@ -56,7 +60,7 @@ public class CycleActivity extends Activity {
           throw new RuntimeException("Start button clicked when not bound");
         } else if (!havePermissions) {
           getPermissions();
-        } else if (serviceBinder.isStarted()) {
+        } else if (started) {
           throw new RuntimeException("Start button clicked when started");
         } else {
           serviceBinder.start();
@@ -69,7 +73,7 @@ public class CycleActivity extends Activity {
       public void onClick(View view) {
         if (serviceBinder == null) {
           throw new RuntimeException("Stop button clicked when not bound");
-        } else if (!serviceBinder.isStarted()) {
+        } else if (!started) {
           throw new RuntimeException("Stop button clicked when not started");
         } else {
           serviceBinder.stop();
@@ -82,11 +86,10 @@ public class CycleActivity extends Activity {
       public void onClick(View view) {
         if (serviceBinder == null) {
           throw new RuntimeException("Share button clicked when not bound");
-        } else if (!serviceBinder.isStarted()) {
+        } else if (!started) {
           throw new RuntimeException("Share button clicked when not started");
         }
-        startActivity(
-            Intent.createChooser(getShareIntent(serviceBinder.getToken()), "Share via..."));
+        startActivity(Intent.createChooser(getShareIntent(token), "Share via..."));
       }
     });
 
@@ -95,10 +98,10 @@ public class CycleActivity extends Activity {
       public void onClick(View view) {
         if (serviceBinder == null) {
           throw new RuntimeException("Show button clicked when not bound");
-        } else if (!serviceBinder.isStarted()) {
+        } else if (!started) {
           throw new RuntimeException("Show button clicked when not started");
         }
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getUrl(serviceBinder.getToken()))));
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getUrl(token))));
       }
     });
 
@@ -153,12 +156,12 @@ public class CycleActivity extends Activity {
   }
 
   private void updateButtonEnabled() {
-    button.setEnabled(serviceBinder != null && !serviceBinder.isStarted());
-    stopButton.setEnabled(serviceBinder != null && serviceBinder.isStarted());
+    button.setEnabled(serviceBinder != null && !started);
+    stopButton.setEnabled(serviceBinder != null && started);
   }
 
   private void updateShareButtonEnabled() {
-    boolean enabled = serviceBinder != null && serviceBinder.isStarted();
+    boolean enabled = serviceBinder != null && started;
     shareButton.setEnabled(enabled);
     showButton.setEnabled(enabled);
   }
@@ -185,6 +188,8 @@ public class CycleActivity extends Activity {
   private final Runnable binderListener = new Runnable() {
     @Override
     public void run() {
+      started = serviceBinder.isStarted();
+      token = serviceBinder.getToken();
       updateAll();
     }
   };
@@ -195,6 +200,7 @@ public class CycleActivity extends Activity {
       Log.i(TAG, "onServiceConnected");
       serviceBinder = (CycleService.Binder) binder;
       serviceBinder.addListener(binderListener);
+      binderListener.run();
       updateAll();
     }
 
