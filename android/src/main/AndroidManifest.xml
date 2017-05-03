@@ -10,13 +10,6 @@
     <application
     android:label="@string/application_name"
     android:icon="@mipmap/launcher">
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
-
         <activity
             android:name=".CycleActivity"
             android:label="@string/cycle_activity_name">
@@ -24,22 +17,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".CycleMapActivity"
-            android:label="@string/cycle_map_activity_name"
-            android:launchMode="standard"
-            android:documentLaunchMode="intoExisting">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
-                <data android:scheme="https" />
-                <data
-                    android:host="romper-stomper.appspot.com"
-                    android:pathPrefix="/cycler"/>
             </intent-filter>
         </activity>
         <service

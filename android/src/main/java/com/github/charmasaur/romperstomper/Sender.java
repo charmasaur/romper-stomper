@@ -12,9 +12,6 @@ import com.android.volley.toolbox.Volley;
 
 public class Sender {
   private static final String TAG = Sender.class.getSimpleName();
-  private static final String SCHEME = "http";
-  private static final String AUTHORITY = "romper-stomper.appspot.com";
-  private static final String CYCLE_PATH = "cycle_submit";
 
   private final RequestQueue queue;
 
@@ -22,11 +19,8 @@ public class Sender {
     queue = Volley.newRequestQueue(context);
   }
 
-  public void sendCycle(double lat, double lng, long time, String thistoken) {
-    Uri.Builder uriBuilder = new Uri.Builder()
-        .scheme(SCHEME)
-        .authority(AUTHORITY)
-        .path(CYCLE_PATH)
+  public void sendCycle(String url, double lat, double lng, long time, String thistoken) {
+    Uri.Builder uriBuilder = Uri.parse(url).buildUpon()
         .appendQueryParameter("token", thistoken)
         .appendQueryParameter("lat", Double.toString(lat))
         .appendQueryParameter("lng", Double.toString(lng))

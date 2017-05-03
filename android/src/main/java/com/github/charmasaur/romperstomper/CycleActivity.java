@@ -30,8 +30,6 @@ public class CycleActivity extends Activity {
 
   private Button button;
   private Button stopButton;
-  private Button shareButton;
-  private Button showButton;
   private boolean havePermissions;
 
   // Valid iff serviceBinder is non-null.
@@ -40,6 +38,9 @@ public class CycleActivity extends Activity {
 
   @Nullable
   private CycleService.Binder serviceBinder;
+
+  @Nullable
+  private String url;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -50,8 +51,6 @@ public class CycleActivity extends Activity {
 
     button = (Button) findViewById(R.id.start_stop_button);
     stopButton = (Button) findViewById(R.id.stop_button);
-    shareButton = (Button) findViewById(R.id.share_button);
-    showButton = (Button) findViewById(R.id.show_button);
 
     button.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -60,10 +59,12 @@ public class CycleActivity extends Activity {
           throw new RuntimeException("Start button clicked when not bound");
         } else if (!havePermissions) {
           getPermissions();
+        } else if (url == null) {
+          getUrl();
         } else if (started) {
           throw new RuntimeException("Start button clicked when started");
         } else {
-          serviceBinder.start();
+          serviceBinder.start(url);
         }
       }
     });
@@ -78,30 +79,6 @@ public class CycleActivity extends Activity {
         } else {
           serviceBinder.stop();
         }
-      }
-    });
-
-    shareButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        if (serviceBinder == null) {
-          throw new RuntimeException("Share button clicked when not bound");
-        } else if (!started) {
-          throw new RuntimeException("Share button clicked when not started");
-        }
-        startActivity(Intent.createChooser(getShareIntent(token), "Share via..."));
-      }
-    });
-
-    showButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        if (serviceBinder == null) {
-          throw new RuntimeException("Show button clicked when not bound");
-        } else if (!started) {
-          throw new RuntimeException("Show button clicked when not started");
-        }
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getUrl(token))));
       }
     });
 
@@ -132,6 +109,10 @@ public class CycleActivity extends Activity {
     updateAll();
   }
 
+  private void getUrl() {
+    // TODO
+  }
+
   private void getPermissions() {
     ActivityCompat.requestPermissions(this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
   }
@@ -150,6 +131,8 @@ public class CycleActivity extends Activity {
       button.setText("Loading...");
     } else if (!havePermissions) {
       button.setText("Waiting for permissions...");
+    } else if (url == null) {
+      button.setText("Waiting for URL...");
     } else {
       button.setText("Start");
     }
@@ -160,29 +143,9 @@ public class CycleActivity extends Activity {
     stopButton.setEnabled(serviceBinder != null && started);
   }
 
-  private void updateShareButtonEnabled() {
-    boolean enabled = serviceBinder != null && started;
-    shareButton.setEnabled(enabled);
-    showButton.setEnabled(enabled);
-  }
-
-  private static Intent getShareIntent(String token) {
-    Intent intent = new Intent();
-    intent.setAction(Intent.ACTION_SEND);
-    intent.putExtra(Intent.EXTRA_SUBJECT, "Follow my progress at...");
-    intent.putExtra(Intent.EXTRA_TEXT, "Follow my progress at " + getUrl(token));
-    intent.setType("text/plain");
-    return intent;
-  }
-
-  private static String getUrl(String token) {
-    return "http://romper-stomper.appspot.com/cycler?token=" + token;
-  }
-
   private void updateAll() {
     updateButtonText();
     updateButtonEnabled();
-    updateShareButtonEnabled();
   }
 
   private final Runnable binderListener = new Runnable() {

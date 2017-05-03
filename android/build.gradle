@@ -16,7 +16,7 @@ subprojects {
 
 apply plugin: 'com.android.application'
 
-ext.rootAppId = "com.github.charmasaur.romperstomper"
+ext.rootAppId = "com.github.charmasaur.pomper"
 
 android {
   compileSdkVersion 23
@@ -30,19 +30,18 @@ android {
     targetSdkVersion 23
     versionCode 12
     versionName "1.2"
-    resValue "string", "google_maps_key", (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
   }
   buildTypes {
     debug {
       def final suffix = ".debug"
-      resValue "string", "app_name", "Romper Debug"
+      resValue "string", "app_name", "Pomper Debug"
 
       applicationIdSuffix "${suffix}"
       versionNameSuffix "${suffix}"
     }
     release {
       def final suffix = ""
-      resValue "string", "app_name", "Romper"
+      resValue "string", "app_name", "Pomper"
 
       applicationIdSuffix "${suffix}"
       versionNameSuffix "${suffix}"
@@ -60,7 +59,6 @@ dependencies {
   compile 'com.android.support:support-v4:23.3.0'
   compile 'com.google.android.gms:play-services-base:9.4.0'
   compile 'com.google.android.gms:play-services-location:9.4.0'
-  compile 'com.google.android.gms:play-services-maps:9.4.0'
   compile 'com.google.code.gson:gson:2.6.2'
   compile 'com.android.volley:volley:1.0.0'
 }

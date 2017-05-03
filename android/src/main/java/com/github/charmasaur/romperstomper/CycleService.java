@@ -37,12 +37,16 @@ public final class CycleService extends Service {
    * startService/stopService to start/stop.
    */
   private static final String QUIT_EXTRA = "quit";
+  private static final String URL_EXTRA = "url";
   private final List<Runnable> listeners = new ArrayList<>();
   private LocationRequester locationRequester;
   private Sender sender;
 
   @Nullable
   private String token;
+
+  @Nullable
+  private String url;
 
   /**
    * These must be granted before starting or binding to the service.
@@ -55,7 +59,7 @@ public final class CycleService extends Service {
 
   public interface Binder {
     /** Don't call until permissions are granted. */
-    void start();
+    void start(String url);
     void stop();
     boolean isStarted();
     @Nullable String getToken();
@@ -81,8 +85,12 @@ public final class CycleService extends Service {
     Log.i(TAG, "onStartCommand");
     if (intent.hasExtra(QUIT_EXTRA)) {
       maybeStop();
-    } else {
-      maybeStart();
+    } else if (intent.hasExtra(URL_EXTRA)) {
+      String url = intent.getStringExtra(URL_EXTRA);
+      if (url == null) {
+        throw new RuntimeException("Null URL in the intent");
+      }
+      maybeStart(url);
     }
     return START_NOT_STICKY;
   }
@@ -95,14 +103,15 @@ public final class CycleService extends Service {
     super.onDestroy();
   }
 
-  private void maybeStart() {
+  private void maybeStart(String url) {
     if (token != null) {
       return;
     }
     token = newToken();
+    this.url = url;
     locationRequester.go();
     startForeground(1, new NotificationCompat.Builder(this)
-        .setContentTitle("Romping")
+        .setContentTitle("Pomping")
         .setContentIntent(
             PendingIntent.getActivity(
                 this,
@@ -144,15 +153,18 @@ public final class CycleService extends Service {
       SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
       sdf.setTimeZone(TimeZone.getDefault());
       String ts = sdf.format(new Date(time * 1000));
-      sender.sendCycle(lat, lng, time, token);
+      sender.sendCycle(url, lat, lng, time, token);
     }
   };
 
   private final android.os.Binder binder = new BinderImpl();
   private final class BinderImpl extends android.os.Binder implements Binder {
     @Override
-    public void start() {
-      startService(new Intent(CycleService.this, CycleService.class));
+    public void start(String url) {
+      if (url == null) {
+        throw new RuntimeException("Null URL provided to start");
+      }
+      startService(new Intent(CycleService.this, CycleService.class).putExtra(URL_EXTRA, url));
     }
 
     @Override
