@@ -1,10 +1,13 @@
 package com.github.charmasaur.romperstomper;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +20,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.util.Date;
@@ -27,6 +31,8 @@ import java.text.SimpleDateFormat;
 public class CycleActivity extends Activity {
   private static final String TAG = CycleActivity.class.getSimpleName();
   private static final int PERMISSION_CODE = 1338;
+  private static final String SHARED_PREFS_NAME = "CycleActivity";
+  private static final String URL_KEY = "url_key";
 
   private Button button;
   private Button stopButton;
@@ -82,6 +88,16 @@ public class CycleActivity extends Activity {
       }
     });
 
+    findViewById(R.id.url_button).setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        getUrl();
+      }
+    });
+
+    SharedPreferences prefs = getSharedPreferences(SHARED_PREFS_NAME, 0);
+    url = prefs.getString(URL_KEY, null);
+
     havePermissions = checkThePermissions();
     if (!havePermissions) {
       getPermissions();
@@ -110,7 +126,23 @@ public class CycleActivity extends Activity {
   }
 
   private void getUrl() {
-    // TODO
+    final EditText editText = new EditText(this);
+    if (url != null) {
+      editText.setText(url);
+    }
+    new AlertDialog.Builder(this)
+        .setTitle("Enter URL")
+        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+          @Override
+          public void onClick(DialogInterface dialog, int which) {
+            url = editText.getText().toString();
+            getSharedPreferences(SHARED_PREFS_NAME, 0).edit().putString(URL_KEY, url).apply();
+            updateAll();
+          }
+        })
+        .setView(editText)
+        .create()
+        .show();
   }
 
   private void getPermissions() {
