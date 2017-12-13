@@ -6,4 +6,9 @@
         android:showAsAction="ifRoom"
         android:title="Refresh"/>
 
+    <item
+        android:id="@+id/menu_location"
+        android:showAsAction="ifRoom"
+        android:title="Me"/>
+
 </menu>

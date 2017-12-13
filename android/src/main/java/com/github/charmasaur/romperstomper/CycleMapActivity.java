@@ -1,10 +1,14 @@
 package com.github.charmasaur.romperstomper;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,6 +28,7 @@ import java.text.SimpleDateFormat;
 
 public class CycleMapActivity extends FragmentActivity {
   private static final String TAG = CycleMapActivity.class.getSimpleName();
+  private static final int PERMISSION_CODE = 1339;
 
   private CycleMapFetcher fetcher;
   @Nullable private GoogleMap googleMap;
@@ -31,6 +36,7 @@ public class CycleMapActivity extends FragmentActivity {
   @Nullable private Toast toast;
   @Nullable private String url;
 
+  private boolean usingLocation;
   private boolean hasSetInitialViewport;
 
   @Override
@@ -56,10 +62,22 @@ public class CycleMapActivity extends FragmentActivity {
   }
 
   @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    menu.findItem(R.id.menu_location).setIcon(
+        usingLocation
+            ? android.R.drawable.ic_menu_mylocation
+            : android.R.drawable.ic_menu_help);
+    return true;
+  }
+
+  @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case R.id.menu_refresh:
         refresh();
+        return true;
+      case R.id.menu_location:
+        trySetUsingLocation(!usingLocation);
         return true;
     }
     return super.onOptionsItemSelected(item);
@@ -74,6 +92,40 @@ public class CycleMapActivity extends FragmentActivity {
   @Override
   public void onDestroy() {
     super.onDestroy();
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grants) {
+    // Presumably the user wants location.
+    if (hasPermission()) {
+      setUsingLocation(true);
+    }
+  }
+
+  private void trySetUsingLocation(boolean usingLocation) {
+    if (usingLocation && !hasPermission()) {
+      ActivityCompat.requestPermissions(this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
+      return;
+    }
+    setUsingLocation(usingLocation);
+  }
+
+  private void setUsingLocation(boolean usingLocation) {
+    this.usingLocation = usingLocation;
+    maybeEnableMyLocationLayer();
+    invalidateOptionsMenu();
+  }
+
+  private boolean hasPermission() {
+    return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+      == PackageManager.PERMISSION_GRANTED;
+  }
+
+  private void maybeEnableMyLocationLayer() {
+    if (googleMap == null) {
+      return;
+    }
+    googleMap.setMyLocationEnabled(usingLocation);
   }
 
   private void handleIntent() {
@@ -159,6 +211,7 @@ public class CycleMapActivity extends FragmentActivity {
     @Override
     public void onMapReady(GoogleMap googleMap) {
       CycleMapActivity.this.googleMap = googleMap;
+      maybeEnableMyLocationLayer();
       maybeUpdateMarkers();
     }
   };
