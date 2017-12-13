@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 public class CycleMapActivity extends FragmentActivity {
   private static final String TAG = CycleMapActivity.class.getSimpleName();
   private static final int PERMISSION_CODE = 1339;
+  private static final String USING_LOCATION_KEY = "using_location";
 
   private CycleMapFetcher fetcher;
   @Nullable private GoogleMap googleMap;
@@ -47,6 +48,10 @@ public class CycleMapActivity extends FragmentActivity {
       .findFragmentById(R.id.map_fragment);
     fragment.getMapAsync(onMapReadyCallback);
     fetcher = new CycleMapFetcher(this, fetcherCallback);
+
+    if (savedInstanceState != null) {
+      trySetUsingLocation(savedInstanceState.getBoolean(USING_LOCATION_KEY, false));
+    }
     handleIntent();
   }
 
@@ -87,6 +92,12 @@ public class CycleMapActivity extends FragmentActivity {
   public void onNewIntent(Intent intent) {
     setIntent(intent);
     handleIntent();
+  }
+
+  @Override
+  public void onSaveInstanceState(Bundle bundle) {
+    super.onSaveInstanceState(bundle);
+    bundle.putBoolean(USING_LOCATION_KEY, usingLocation);
   }
 
   @Override
