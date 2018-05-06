@@ -1,4 +1,4 @@
-package com.github.charmasaur.romperstomper;
+package com.github.charmasaur.romperstomper.tracker;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
@@ -15,7 +15,9 @@ import com.google.gson.JsonArray;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Fetches target locations.
+ */
 public class CycleMapFetcher {
   private static final String TAG = CycleMapFetcher.class.getSimpleName();
 

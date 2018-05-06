@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".CycleMapActivity"
+            android:name=".tracker.CycleMapActivity"
             android:label="@string/cycle_map_activity_name"
             android:launchMode="standard"
             android:documentLaunchMode="intoExisting">

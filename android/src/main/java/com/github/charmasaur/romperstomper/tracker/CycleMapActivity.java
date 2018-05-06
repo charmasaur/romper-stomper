@@ -1,4 +1,4 @@
-package com.github.charmasaur.romperstomper;
+package com.github.charmasaur.romperstomper.tracker;
 
 import android.Manifest;
 import android.app.Activity;
@@ -14,14 +14,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.GoogleMap;
+import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.SupportMapFragment;
 import java.util.List;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
@@ -31,13 +32,28 @@ public class CycleMapActivity extends FragmentActivity {
   private static final int PERMISSION_CODE = 1339;
   private static final String USING_LOCATION_KEY = "using_location";
 
+  private final MyLocation myLocation = new MyLocation(myLocationPermissions, myLocationLayer);
+  private final MyLocation.Permissions myLocationPermissions = new MyLocation.Permissions() {
+    @Override
+    public void request() {
+      ActivityCompat.requestPermissions(
+          CycleMapActivity.this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
+    }
+
+    @Override
+    public void has() {
+      return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+          == PackageManager.PERMISSION_GRANTED;
+    }
+  };
+  private final MyLocationLayer myLocationLayer = new MyLocationLayer();
+
   private CycleMapFetcher fetcher;
-  @Nullable private GoogleMap googleMap;
+  @Nullable private MapboxMap mapboxMap;
   @Nullable private List<CycleMapFetcher.MarkerInfo> markers;
   @Nullable private Toast toast;
   @Nullable private String url;
 
-  private boolean usingLocation;
   private boolean hasSetInitialViewport;
 
   @Override
@@ -48,9 +64,10 @@ public class CycleMapActivity extends FragmentActivity {
       .findFragmentById(R.id.map_fragment);
     fragment.getMapAsync(onMapReadyCallback);
     fetcher = new CycleMapFetcher(this, fetcherCallback);
+    myLocation = new MyLocation();
 
     if (savedInstanceState != null) {
-      trySetUsingLocation(savedInstanceState.getBoolean(USING_LOCATION_KEY, false));
+      myLocation.request(savedInstanceState.getBoolean(USING_LOCATION_KEY, false));
     }
     handleIntent();
   }
@@ -69,7 +86,7 @@ public class CycleMapActivity extends FragmentActivity {
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
     menu.findItem(R.id.menu_location).setIcon(
-        usingLocation
+        myLocation.isShowing()
             ? android.R.drawable.ic_menu_mylocation
             : android.R.drawable.ic_menu_help);
     return true;
@@ -82,7 +99,7 @@ public class CycleMapActivity extends FragmentActivity {
         refresh();
         return true;
       case R.id.menu_location:
-        trySetUsingLocation(!usingLocation);
+        myLocation.request(!myLocation.isShowing());
         return true;
     }
     return super.onOptionsItemSelected(item);
@@ -97,7 +114,7 @@ public class CycleMapActivity extends FragmentActivity {
   @Override
   public void onSaveInstanceState(Bundle bundle) {
     super.onSaveInstanceState(bundle);
-    bundle.putBoolean(USING_LOCATION_KEY, usingLocation);
+    bundle.putBoolean(USING_LOCATION_KEY, myLocation.isShowing());
   }
 
   @Override
@@ -107,36 +124,7 @@ public class CycleMapActivity extends FragmentActivity {
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grants) {
-    // Presumably the user wants location.
-    if (hasPermission()) {
-      setUsingLocation(true);
-    }
-  }
-
-  private void trySetUsingLocation(boolean usingLocation) {
-    if (usingLocation && !hasPermission()) {
-      ActivityCompat.requestPermissions(this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
-      return;
-    }
-    setUsingLocation(usingLocation);
-  }
-
-  private void setUsingLocation(boolean usingLocation) {
-    this.usingLocation = usingLocation;
-    maybeEnableMyLocationLayer();
-    invalidateOptionsMenu();
-  }
-
-  private boolean hasPermission() {
-    return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-      == PackageManager.PERMISSION_GRANTED;
-  }
-
-  private void maybeEnableMyLocationLayer() {
-    if (googleMap == null) {
-      return;
-    }
-    googleMap.setMyLocationEnabled(usingLocation);
+    myLocation.onPermissionMaybeGranted();
   }
 
   private void handleIntent() {
@@ -148,8 +136,8 @@ public class CycleMapActivity extends FragmentActivity {
       getIntent().getData().buildUpon().appendQueryParameter("native", "true").build().toString();
     hasSetInitialViewport = false;
     markers = null;
-    if (googleMap != null) {
-      googleMap.clear();
+    if (mapboxMap != null) {
+      mapboxMap.clear();
     }
     refresh();
   }
@@ -160,17 +148,17 @@ public class CycleMapActivity extends FragmentActivity {
   }
 
   private void maybeUpdateMarkers() {
-    if (googleMap == null || markers == null) {
+    if (mapboxMap == null || markers == null) {
       return;
     }
-    googleMap.clear();
+    mapboxMap.clear();
     LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
     PolylineOptions options = new PolylineOptions();
     LatLng prev = null;
     Marker lastMarker = null;
     for (CycleMapFetcher.MarkerInfo marker : markers) {
       LatLng latLng = new LatLng(marker.lat, marker.lng);
-      lastMarker = googleMap.addMarker(
+      lastMarker = mapboxMap.addMarker(
           new MarkerOptions()
               .position(latLng)
               .title(formatTimestamp(marker.timestamp)));
@@ -180,9 +168,9 @@ public class CycleMapActivity extends FragmentActivity {
       }
       prev = latLng;
     }
-    googleMap.addPolyline(options);
+    mapboxMap.addPolyline(options);
     if (!hasSetInitialViewport) {
-      googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+      mapboxMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
       hasSetInitialViewport = true;
     }
     if (lastMarker != null) {
@@ -220,9 +208,21 @@ public class CycleMapActivity extends FragmentActivity {
 
   private final OnMapReadyCallback onMapReadyCallback = new OnMapReadyCallback() {
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-      CycleMapActivity.this.googleMap = googleMap;
-      maybeEnableMyLocationLayer();
+    public void onMapReady(MapboxMap mapboxMap) {
+      CycleMapActivity.this.mapboxMap = mapboxMap;
+
+      locationEngine =
+          new LocationEngineProvider(CycleMapActivity.this).obtainBestLocationEngineAvailable();
+      locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
+      locationEngine.setFastestInterval(1000);
+
+      locationLayerPlugin = new LocationLayerPlugin(mapView, mapboxMap, locationEngine);
+      locationLayerPlugin.addOnLocationClickListener(this);
+      locationLayerPlugin.addOnCameraTrackingChangedListener(this);
+      locationLayerPlugin.setCameraMode(cameraMode);
+
+      locationEngine.activate();
+
       maybeUpdateMarkers();
     }
   };
