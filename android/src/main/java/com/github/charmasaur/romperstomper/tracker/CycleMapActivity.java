@@ -1,7 +1,6 @@
 package com.github.charmasaur.romperstomper.tracker;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -9,69 +8,36 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 import com.github.charmasaur.romperstomper.R;
-import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.annotations.Marker;
-import com.mapbox.mapboxsdk.annotations.MarkerOptions;
-import com.mapbox.mapboxsdk.annotations.PolylineOptions;
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
-import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.geometry.LatLngBounds;
-import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.mapbox.mapboxsdk.maps.SupportMapFragment;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Calendar;
-import java.text.SimpleDateFormat;
 
 /**
  * Activity for showing a map of romped locations.
  */
 public final class CycleMapActivity extends FragmentActivity {
-  private static final String TAG = CycleMapActivity.class.getSimpleName();
   private static final int PERMISSION_CODE = 1339;
   private static final String USING_LOCATION_KEY = "using_location";
 
-  private final MyLocation.Permissions myLocationPermissions = new MyLocation.Permissions() {
-    @Override
-    public void request() {
-      ActivityCompat.requestPermissions(
-          CycleMapActivity.this,
-          new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
-          PERMISSION_CODE);
-    }
-
-    @Override
-    public boolean has() {
-      return ContextCompat.checkSelfPermission(
-              CycleMapActivity.this,
-              Manifest.permission.ACCESS_FINE_LOCATION)
-          == PackageManager.PERMISSION_GRANTED;
-    }
-  };
-  private final MyLocationLayer myLocationLayer = new MyLocationLayer();
-  private final MyLocation myLocation = new MyLocation(myLocationPermissions, myLocationLayer);
-
+  private CycleMap cycleMap;
   private CycleMapFetcher fetcher;
-  @Nullable private MapboxMap mapboxMap;
-  @Nullable private List<CycleMapFetcher.MarkerInfo> markers;
+  private MyLocation myLocation;
+
   @Nullable private Toast toast;
   @Nullable private String url;
-
-  private boolean hasSetInitialViewport;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    Mapbox.getInstance(this, getString(R.string.mapbox_key));
-    setContentView(R.layout.activity_cycle_map);
-    SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager()
-      .findFragmentById(R.id.map_fragment);
-    fragment.getMapAsync(onMapReadyCallback);
+    cycleMap = new MapboxCycleMap(getLayoutInflater(), getSupportFragmentManager());
+    cycleMap.onCreate(savedInstanceState);
+    setContentView(cycleMap.getView());
+
+    myLocation = new MyLocation(myLocationPermissions, cycleMap);
+
     fetcher = new CycleMapFetcher(this, fetcherCallback);
 
     if (savedInstanceState != null) {
@@ -83,6 +49,31 @@ public final class CycleMapActivity extends FragmentActivity {
   @Override
   public void onStart() {
     super.onStart();
+    cycleMap.onStart();
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    cycleMap.onResume();
+  }
+
+  @Override
+  public void onPause() {
+    cycleMap.onPause();
+    super.onPause();
+  }
+
+  @Override
+  public void onStop() {
+    cycleMap.onStop();
+    super.onStop();
+  }
+
+  @Override
+  public void onDestroy() {
+    cycleMap.onDestroy();
+    super.onDestroy();
   }
 
   @Override
@@ -123,12 +114,8 @@ public final class CycleMapActivity extends FragmentActivity {
   @Override
   public void onSaveInstanceState(Bundle bundle) {
     super.onSaveInstanceState(bundle);
+    cycleMap.onSaveInstanceState(bundle);
     bundle.putBoolean(USING_LOCATION_KEY, myLocation.isShowing());
-  }
-
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
   }
 
   @Override
@@ -144,55 +131,13 @@ public final class CycleMapActivity extends FragmentActivity {
 
     url =
       getIntent().getData().buildUpon().appendQueryParameter("native", "true").build().toString();
-    hasSetInitialViewport = false;
-    markers = null;
-    if (mapboxMap != null) {
-      mapboxMap.clear();
-    }
+    cycleMap.setMarkers(ImmutableList.<CycleMapFetcher.MarkerInfo>of());
     refresh();
   }
 
   private void refresh() {
     fetcher.fetch(url);
     toast("Fetching");
-  }
-
-  private void maybeUpdateMarkers() {
-    if (mapboxMap == null || markers == null) {
-      return;
-    }
-    mapboxMap.clear();
-    LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
-    PolylineOptions options = new PolylineOptions();
-    LatLng prev = null;
-    Marker lastMarker = null;
-    for (CycleMapFetcher.MarkerInfo marker : markers) {
-      LatLng latLng = new LatLng(marker.lat, marker.lng);
-      lastMarker = mapboxMap.addMarker(
-          new MarkerOptions()
-              .position(latLng)
-              .title(formatTimestamp(marker.timestamp)));
-      boundsBuilder.include(latLng);
-      if (prev != null) {
-        options.add(prev, latLng);
-      }
-      prev = latLng;
-    }
-    mapboxMap.addPolyline(options);
-    if (!hasSetInitialViewport) {
-      mapboxMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
-      hasSetInitialViewport = true;
-    }
-    //if (lastMarker != null) {
-    //  lastMarker.getInfoWindow().update();
-    //}
-  }
-
-  private String formatTimestamp(long timestamp) {
-    SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTimeInMillis(timestamp * 1000);
-    return formatter.format(calendar.getTime());
   }
 
   private void toast(String message) {
@@ -206,8 +151,8 @@ public final class CycleMapActivity extends FragmentActivity {
   private final CycleMapFetcher.Callback fetcherCallback = new CycleMapFetcher.Callback() {
     @Override
     public void onSuccess(List<CycleMapFetcher.MarkerInfo> markers) {
-      CycleMapActivity.this.markers = markers;
-      maybeUpdateMarkers();
+      // TODO: Change this method to accept an immutable list.
+      cycleMap.setMarkers(ImmutableList.copyOf(markers));
       toast("Success");
     }
     @Override
@@ -216,24 +161,21 @@ public final class CycleMapActivity extends FragmentActivity {
     }
   };
 
-  private final OnMapReadyCallback onMapReadyCallback = new OnMapReadyCallback() {
+  private final MyLocation.Permissions myLocationPermissions = new MyLocation.Permissions() {
     @Override
-    public void onMapReady(MapboxMap mapboxMap) {
-      CycleMapActivity.this.mapboxMap = mapboxMap;
+    public void request() {
+      ActivityCompat.requestPermissions(
+          CycleMapActivity.this,
+          new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
+          PERMISSION_CODE);
+    }
 
-      //locationEngine =
-      //    new LocationEngineProvider(CycleMapActivity.this).obtainBestLocationEngineAvailable();
-      //locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-      //locationEngine.setFastestInterval(1000);
-
-      //locationLayerPlugin = new LocationLayerPlugin(mapView, mapboxMap, locationEngine);
-      //locationLayerPlugin.addOnLocationClickListener(this);
-      //locationLayerPlugin.addOnCameraTrackingChangedListener(this);
-      //locationLayerPlugin.setCameraMode(cameraMode);
-
-      //locationEngine.activate();
-
-      maybeUpdateMarkers();
+    @Override
+    public boolean has() {
+      return ContextCompat.checkSelfPermission(
+              CycleMapActivity.this,
+              Manifest.permission.ACCESS_FINE_LOCATION)
+          == PackageManager.PERMISSION_GRANTED;
     }
   };
 }

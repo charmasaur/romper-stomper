@@ -4,8 +4,8 @@
     android:layout_height="match_parent">
 
     <fragment
-        class="com.mapbox.mapboxsdk.maps.SupportMapFragment"
-        android:id="@+id/map_fragment"
+        class="com.google.android.gms.maps.SupportMapFragment"
+        android:id="@+id/google_maps_map_fragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

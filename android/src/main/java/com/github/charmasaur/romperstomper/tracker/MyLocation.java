@@ -11,30 +11,15 @@ public final class MyLocation {
     void request();
     boolean has();
   }
-  /**
-   * Enables or disables the location layer.
-   *
-   * <p>The layer is initially assumed disabled.
-   */
-  public interface LayerEnabler {
-    /**
-     * Guaranteed only to be called when the appropriate permissions are granted.
-     *
-     * <p>Will only be called when the layer is currently disabled.
-     */
-    void enable();
-    /** Will only be called when the layer is currently disabled. */
-    void disable();
-  }
 
   private final Permissions permissions;
-  private final LayerEnabler layerEnabler;
+  private final CycleMap cycleMap;
 
   private boolean isShowing;
 
-  public MyLocation(Permissions permissions, LayerEnabler layerEnabler) {
+  public MyLocation(Permissions permissions, CycleMap cycleMap) {
     this.permissions = permissions;
-    this.layerEnabler = layerEnabler;
+    this.cycleMap = cycleMap;
   }
 
   public void request(boolean show) {
@@ -54,7 +39,7 @@ public final class MyLocation {
       return;
     }
     isShowing = true;
-    layerEnabler.enable();
+    cycleMap.showUserLocation();
   }
 
   private void requestShow() {
@@ -64,7 +49,7 @@ public final class MyLocation {
 
     if (permissions.has()) {
       isShowing = true;
-      layerEnabler.enable();
+      cycleMap.showUserLocation();
       return;
     }
     permissions.request();
@@ -75,6 +60,6 @@ public final class MyLocation {
       return;
     }
     isShowing = false;
-    layerEnabler.disable();
+    cycleMap.hideUserLocation();
   }
 }

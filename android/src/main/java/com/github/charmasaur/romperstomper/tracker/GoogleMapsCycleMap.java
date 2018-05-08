@@ -6,41 +6,38 @@ import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import com.github.charmasaur.romperstomper.R;
-import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.annotations.Marker;
-import com.mapbox.mapboxsdk.annotations.MarkerOptions;
-import com.mapbox.mapboxsdk.annotations.PolylineOptions;
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
-import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.geometry.LatLngBounds;
-import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.mapbox.mapboxsdk.maps.SupportMapFragment;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.common.collect.ImmutableList;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 
 /**
- * Implementation of {@link CycleMap} using Mapbox.
+ * Implementation of {@link CycleMap} using the Google Maps API.
  */
-public final class MapboxCycleMap implements CycleMap {
+public final class GoogleMapsCycleMap implements CycleMap {
   private final View view;
 
   private ImmutableList<CycleMapFetcher.MarkerInfo> markers = ImmutableList.of();
   private boolean hasSetInitialViewport;
+  private boolean showingLocation;
 
-  @Nullable private MapboxMap mapboxMap;
+  @Nullable private GoogleMap googleMap;
 
-  public MapboxCycleMap(
+  public GoogleMapsCycleMap(
       LayoutInflater layoutInflater,
       FragmentManager fragmentManager) {
-    Mapbox.getInstance(
-        layoutInflater.getContext(),
-        layoutInflater.getContext().getResources().getString(R.string.mapbox_key));
-    view = layoutInflater.inflate(R.layout.cycle_map_mapbox, /* root= */ null);
+    view = layoutInflater.inflate(R.layout.cycle_map_google_maps, /* root= */ null);
 
     SupportMapFragment fragment =
-        (SupportMapFragment) fragmentManager.findFragmentById(R.id.mapbox_map_fragment);
+        (SupportMapFragment) fragmentManager.findFragmentById(R.id.google_maps_map_fragment);
     fragment.getMapAsync(onMapReadyCallback);
   }
 
@@ -70,14 +67,13 @@ public final class MapboxCycleMap implements CycleMap {
       hasSetInitialViewport = false;
     }
     this.markers = markers;
-    if (mapboxMap == null) {
-      return;
+    if (googleMap != null) {
+      updateMarkersOnMap();
     }
-    updateMarkersOnMap();
   }
 
   private void updateMarkersOnMap() {
-    mapboxMap.clear();
+    googleMap.clear();
     if (markers.isEmpty()) {
       return;
     }
@@ -87,7 +83,7 @@ public final class MapboxCycleMap implements CycleMap {
     Marker lastMarker = null;
     for (CycleMapFetcher.MarkerInfo marker : markers) {
       LatLng latLng = new LatLng(marker.lat, marker.lng);
-      lastMarker = mapboxMap.addMarker(
+      lastMarker = googleMap.addMarker(
           new MarkerOptions()
               .position(latLng)
               .title(formatTimestamp(marker.timestamp)));
@@ -97,43 +93,41 @@ public final class MapboxCycleMap implements CycleMap {
       }
       prev = latLng;
     }
-    mapboxMap.addPolyline(options);
-
-    // TODO: It'd be cool to just detect gestures rather than doing this "first markers" thing.
+    googleMap.addPolyline(options);
     if (!hasSetInitialViewport) {
-      mapboxMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+      googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
       hasSetInitialViewport = true;
     }
-    // TODO: Can we show the most recent info window?
+    if (lastMarker != null) {
+      lastMarker.showInfoWindow();
+    }
   }
 
   @Override
   public void showUserLocation() {
-    // TODO: Implement.
+    showingLocation = true;
+    if (googleMap != null) {
+      updateMyLocationLayer();
+    }
   }
 
   @Override
   public void hideUserLocation() {
-    // TODO: Way ahead of you.
+    showingLocation = false;
+    if (googleMap != null) {
+      updateMyLocationLayer();
+    }
+  }
+
+  private void updateMyLocationLayer() {
+    googleMap.setMyLocationEnabled(showingLocation);
   }
 
   private final OnMapReadyCallback onMapReadyCallback = new OnMapReadyCallback() {
     @Override
-    public void onMapReady(MapboxMap mapboxMap) {
-      MapboxCycleMap.this.mapboxMap = mapboxMap;
-
-      //locationEngine =
-      //    new LocationEngineProvider(CycleMapActivity.this).obtainBestLocationEngineAvailable();
-      //locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-      //locationEngine.setFastestInterval(1000);
-
-      //locationLayerPlugin = new LocationLayerPlugin(mapView, mapboxMap, locationEngine);
-      //locationLayerPlugin.addOnLocationClickListener(this);
-      //locationLayerPlugin.addOnCameraTrackingChangedListener(this);
-      //locationLayerPlugin.setCameraMode(cameraMode);
-
-      //locationEngine.activate();
-
+    public void onMapReady(GoogleMap googleMap) {
+      GoogleMapsCycleMap.this.googleMap = googleMap;
+      updateMyLocationLayer();
       updateMarkersOnMap();
     }
   };
