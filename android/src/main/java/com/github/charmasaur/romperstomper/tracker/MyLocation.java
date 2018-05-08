@@ -1,7 +1,7 @@
 package com.github.charmasaur.romperstomper.tracker;
 
 /**
- * Decides whether or not to show the user's current location on the map.
+ * Shows the user's current location on the map when requested and allowed.
  */
 public final class MyLocation {
   /**

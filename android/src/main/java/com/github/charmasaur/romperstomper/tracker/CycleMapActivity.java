@@ -13,13 +13,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.GoogleMap;
+import com.github.charmasaur.romperstomper.R;
+import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.annotations.Marker;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.mapboxsdk.annotations.PolylineOptions;
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
+import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.SupportMapFragment;
@@ -27,26 +28,33 @@ import java.util.List;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 
-public class CycleMapActivity extends FragmentActivity {
+/**
+ * Activity for showing a map of romped locations.
+ */
+public final class CycleMapActivity extends FragmentActivity {
   private static final String TAG = CycleMapActivity.class.getSimpleName();
   private static final int PERMISSION_CODE = 1339;
   private static final String USING_LOCATION_KEY = "using_location";
 
-  private final MyLocation myLocation = new MyLocation(myLocationPermissions, myLocationLayer);
   private final MyLocation.Permissions myLocationPermissions = new MyLocation.Permissions() {
     @Override
     public void request() {
       ActivityCompat.requestPermissions(
-          CycleMapActivity.this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
+          CycleMapActivity.this,
+          new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
+          PERMISSION_CODE);
     }
 
     @Override
-    public void has() {
-      return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+    public boolean has() {
+      return ContextCompat.checkSelfPermission(
+              CycleMapActivity.this,
+              Manifest.permission.ACCESS_FINE_LOCATION)
           == PackageManager.PERMISSION_GRANTED;
     }
   };
   private final MyLocationLayer myLocationLayer = new MyLocationLayer();
+  private final MyLocation myLocation = new MyLocation(myLocationPermissions, myLocationLayer);
 
   private CycleMapFetcher fetcher;
   @Nullable private MapboxMap mapboxMap;
@@ -59,12 +67,12 @@ public class CycleMapActivity extends FragmentActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    Mapbox.getInstance(this, getString(R.string.mapbox_key));
     setContentView(R.layout.activity_cycle_map);
     SupportMapFragment fragment = (SupportMapFragment) getSupportFragmentManager()
       .findFragmentById(R.id.map_fragment);
     fragment.getMapAsync(onMapReadyCallback);
     fetcher = new CycleMapFetcher(this, fetcherCallback);
-    myLocation = new MyLocation();
 
     if (savedInstanceState != null) {
       myLocation.request(savedInstanceState.getBoolean(USING_LOCATION_KEY, false));
@@ -100,6 +108,7 @@ public class CycleMapActivity extends FragmentActivity {
         return true;
       case R.id.menu_location:
         myLocation.request(!myLocation.isShowing());
+        invalidateOptionsMenu();
         return true;
     }
     return super.onOptionsItemSelected(item);
@@ -125,6 +134,7 @@ public class CycleMapActivity extends FragmentActivity {
   @Override
   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grants) {
     myLocation.onPermissionMaybeGranted();
+    invalidateOptionsMenu();
   }
 
   private void handleIntent() {
@@ -173,9 +183,9 @@ public class CycleMapActivity extends FragmentActivity {
       mapboxMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
       hasSetInitialViewport = true;
     }
-    if (lastMarker != null) {
-      lastMarker.showInfoWindow();
-    }
+    //if (lastMarker != null) {
+    //  lastMarker.getInfoWindow().update();
+    //}
   }
 
   private String formatTimestamp(long timestamp) {
@@ -211,17 +221,17 @@ public class CycleMapActivity extends FragmentActivity {
     public void onMapReady(MapboxMap mapboxMap) {
       CycleMapActivity.this.mapboxMap = mapboxMap;
 
-      locationEngine =
-          new LocationEngineProvider(CycleMapActivity.this).obtainBestLocationEngineAvailable();
-      locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-      locationEngine.setFastestInterval(1000);
+      //locationEngine =
+      //    new LocationEngineProvider(CycleMapActivity.this).obtainBestLocationEngineAvailable();
+      //locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
+      //locationEngine.setFastestInterval(1000);
 
-      locationLayerPlugin = new LocationLayerPlugin(mapView, mapboxMap, locationEngine);
-      locationLayerPlugin.addOnLocationClickListener(this);
-      locationLayerPlugin.addOnCameraTrackingChangedListener(this);
-      locationLayerPlugin.setCameraMode(cameraMode);
+      //locationLayerPlugin = new LocationLayerPlugin(mapView, mapboxMap, locationEngine);
+      //locationLayerPlugin.addOnLocationClickListener(this);
+      //locationLayerPlugin.addOnCameraTrackingChangedListener(this);
+      //locationLayerPlugin.setCameraMode(cameraMode);
 
-      locationEngine.activate();
+      //locationEngine.activate();
 
       maybeUpdateMarkers();
     }
