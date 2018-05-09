@@ -13,9 +13,9 @@ import com.mapbox.mapboxsdk.annotations.PolylineOptions;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.geometry.LatLngBounds;
+import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.mapbox.mapboxsdk.maps.SupportMapFragment;
 import com.google.common.collect.ImmutableList;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
@@ -25,6 +25,8 @@ import java.text.SimpleDateFormat;
  */
 public final class MapboxCycleMap implements CycleMap {
   private final View view;
+  private final MapView mapView;
+  private final MapboxLocationLayer locationLayer;
 
   private ImmutableList<CycleMapFetcher.MarkerInfo> markers = ImmutableList.of();
   private boolean hasSetInitialViewport;
@@ -39,25 +41,46 @@ public final class MapboxCycleMap implements CycleMap {
         layoutInflater.getContext().getResources().getString(R.string.mapbox_key));
     view = layoutInflater.inflate(R.layout.cycle_map_mapbox, /* root= */ null);
 
-    SupportMapFragment fragment =
-        (SupportMapFragment) fragmentManager.findFragmentById(R.id.mapbox_map_fragment);
-    fragment.getMapAsync(onMapReadyCallback);
+    mapView = (MapView) view.findViewById(R.id.mapbox_map);
+    locationLayer = new MapboxLocationLayer(layoutInflater.getContext(), mapView);
   }
 
   @Override
-  public void onCreate(Bundle savedInstanceState) {}
+  public void onCreate(Bundle savedInstanceState) {
+    mapView.onCreate(savedInstanceState);
+    mapView.getMapAsync(onMapReadyCallback);
+  }
+
   @Override
-  public void onStart() {}
+  public void onStart() {
+    mapView.onStart();
+  }
+
   @Override
-  public void onResume() {}
+  public void onResume() {
+    mapView.onResume();
+  }
+
   @Override
-  public void onPause() {}
+  public void onPause() {
+    mapView.onPause();
+  }
+
   @Override
-  public void onStop() {}
+  public void onStop() {
+    mapView.onStop();
+  }
+
   @Override
-  public void onDestroy() {}
+  public void onDestroy() {
+    locationLayer.destroy();
+    mapView.onDestroy();
+  }
+
   @Override
-  public void onSaveInstanceState(Bundle outState) {}
+  public void onSaveInstanceState(Bundle outState) {
+    mapView.onSaveInstanceState(outState);
+  }
 
   @Override
   public View getView() {
@@ -109,12 +132,12 @@ public final class MapboxCycleMap implements CycleMap {
 
   @Override
   public void showUserLocation() {
-    // TODO: Implement.
+    locationLayer.start();
   }
 
   @Override
   public void hideUserLocation() {
-    // TODO: Way ahead of you.
+    locationLayer.stop();
   }
 
   private final OnMapReadyCallback onMapReadyCallback = new OnMapReadyCallback() {
@@ -122,19 +145,9 @@ public final class MapboxCycleMap implements CycleMap {
     public void onMapReady(MapboxMap mapboxMap) {
       MapboxCycleMap.this.mapboxMap = mapboxMap;
 
-      //locationEngine =
-      //    new LocationEngineProvider(CycleMapActivity.this).obtainBestLocationEngineAvailable();
-      //locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-      //locationEngine.setFastestInterval(1000);
-
-      //locationLayerPlugin = new LocationLayerPlugin(mapView, mapboxMap, locationEngine);
-      //locationLayerPlugin.addOnLocationClickListener(this);
-      //locationLayerPlugin.addOnCameraTrackingChangedListener(this);
-      //locationLayerPlugin.setCameraMode(cameraMode);
-
-      //locationEngine.activate();
-
       updateMarkersOnMap();
+
+      locationLayer.setMapboxMap(mapboxMap);
     }
   };
 
