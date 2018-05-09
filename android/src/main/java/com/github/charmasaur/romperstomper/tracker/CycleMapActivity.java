@@ -150,9 +150,8 @@ public final class CycleMapActivity extends FragmentActivity {
 
   private final CycleMapFetcher.Callback fetcherCallback = new CycleMapFetcher.Callback() {
     @Override
-    public void onSuccess(List<CycleMapFetcher.MarkerInfo> markers) {
-      // TODO: Change this method to accept an immutable list.
-      cycleMap.setMarkers(ImmutableList.copyOf(markers));
+    public void onSuccess(ImmutableList<CycleMapFetcher.MarkerInfo> markers) {
+      cycleMap.setMarkers(markers);
       toast("Success");
     }
     @Override

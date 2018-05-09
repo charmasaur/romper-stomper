@@ -9,11 +9,10 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonArray;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Fetches target locations.
@@ -34,7 +33,7 @@ public class CycleMapFetcher {
 
   public interface Callback {
     void onFailure();
-    void onSuccess(List<MarkerInfo> markers);
+    void onSuccess(ImmutableList<MarkerInfo> markers);
   }
 
   private final Callback callback;
@@ -75,7 +74,6 @@ public class CycleMapFetcher {
   }
 
   private void parseResponse(String r) {
-    List<MarkerInfo> markers = new ArrayList<>();
     JsonArray outer;
     try {
       outer = new JsonParser().parse(r).getAsJsonArray();
@@ -84,6 +82,7 @@ public class CycleMapFetcher {
       callback.onFailure();
       return;
     }
+    ImmutableList.Builder<MarkerInfo> markersBuilder = new ImmutableList.Builder<>();
     for (JsonElement element : outer) {
       JsonArray a = element.getAsJsonArray();
       MarkerInfo newMarker;
@@ -96,8 +95,8 @@ public class CycleMapFetcher {
         Log.i(TAG, "Couldn't parse element", e);
         continue;
       }
-      markers.add(newMarker);
+      markersBuilder.add(newMarker);
     }
-    callback.onSuccess(markers);
+    callback.onSuccess(markersBuilder.build());
   }
 }
