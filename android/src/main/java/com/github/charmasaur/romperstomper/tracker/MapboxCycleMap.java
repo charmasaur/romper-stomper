@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import com.github.charmasaur.romperstomper.R;
+import com.google.common.base.Preconditions;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
@@ -104,17 +105,15 @@ public final class MapboxCycleMap implements CycleMap {
     if (markers.isEmpty()) {
       return;
     }
-    LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
     PolylineOptions options = new PolylineOptions();
     LatLng prev = null;
     Marker lastMarker = null;
     for (CycleMapFetcher.MarkerInfo marker : markers) {
-      LatLng latLng = new LatLng(marker.lat, marker.lng);
+      LatLng latLng = getMarkerLatLng(marker);
       lastMarker = mapboxMap.addMarker(
           new MarkerOptions()
               .position(latLng)
               .title(formatTimestamp(marker.timestamp)));
-      boundsBuilder.include(latLng);
       if (prev != null) {
         options.add(prev, latLng);
       }
@@ -124,10 +123,26 @@ public final class MapboxCycleMap implements CycleMap {
 
     // TODO: It'd be cool to just detect gestures rather than doing this "first markers" thing.
     if (!hasSetInitialViewport) {
-      mapboxMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+      setDefaultCameraPosition();
       hasSetInitialViewport = true;
     }
-    // TODO: Can we show the most recent info window?
+  }
+
+  /**
+   * {@link #markers} must be non-empty.
+   */
+  private void setDefaultCameraPosition() {
+    Preconditions.checkState(markers.size() > 0);
+    if (markers.size() == 1) {
+      mapboxMap.moveCamera(
+          CameraUpdateFactory.newLatLngZoom(getMarkerLatLng(markers.get(0)), 18.));
+      return;
+    }
+    LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
+    for (CycleMapFetcher.MarkerInfo marker : markers) {
+      boundsBuilder.include(getMarkerLatLng(marker));
+    }
+    mapboxMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
   }
 
   @Override
@@ -150,6 +165,10 @@ public final class MapboxCycleMap implements CycleMap {
       locationLayer.setMapboxMap(mapboxMap);
     }
   };
+
+  private static LatLng getMarkerLatLng(CycleMapFetcher.MarkerInfo marker) {
+    return new LatLng(marker.lat, marker.lng);
+  }
 
   private static String formatTimestamp(long timestamp) {
     SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
