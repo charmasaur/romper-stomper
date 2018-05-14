@@ -126,6 +126,8 @@ public final class MapboxCycleMap implements CycleMap {
       setDefaultCameraPosition();
       hasSetInitialViewport = true;
     }
+
+    mapboxMap.selectMarker(lastMarker);
   }
 
   /**
