@@ -18,68 +18,80 @@
       z-index: 99;
     }
     </style>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.css' rel='stylesheet' />
   </head>
   </head>
   <body>
     <div id='map'></div>
     <div id='over_map'><input type="button" value="Refresh" onClick="window.location.reload()"></div>
     <script>
-      function initMap() {
-        var mapDiv = document.getElementById('map');
-        var map = new google.maps.Map(mapDiv, {
-            center: {lat: -33.8688, lng: 151.2093},
-            zoom: 13
-        });
+      var mapDiv = document.getElementById('map');
+      mapboxgl.accessToken = "{{API_KEY}}";
+      var map = new mapboxgl.Map({
+          container: mapDiv,
+          center: {lat: -33.8688, lng: 151.2093},
+          zoom: 13,
+          style: 'mapbox://styles/mapbox/streets-v9'
+      });
 
-        var coords = [];
-        var lastinfo;
-        var lastmarker;
+      var coords = [];
 
-        {% for tuple in list %}
-        var marker = new google.maps.Marker({
-          map: map,
-          position: {lat: {{tuple.0}}, lng: {{tuple.1}}}
-        });
-        function pad_int(x) {
-          return x < 10 ? "0" + x : x;
-        }
-        var date = new Date({{tuple.3}} * 1000);
-        var h = pad_int(date.getHours());
-        var m = pad_int(date.getMinutes());
-        var s = pad_int(date.getSeconds());
-        var D = pad_int(date.getDate());
-        var M = pad_int(date.getMonth() + 1);
-        var Y = date.getFullYear();
-        var info = new google.maps.InfoWindow({
-          content: h + ":" + m + ":" + s + " " + D + "-" + M + "-" + Y
-        });
-        var dispfunc = function(mark, inf) {
-          inf.open(map, mark);
-        };
-        marker.addListener('click', (function(mark, inf) {
-          inf.open(map, mark);
-        }).bind(this, marker, info));
-        coords.push({lat: {{tuple.0}}, lng: {{tuple.1}}});
-        lastinfo = info;
-        lastmarker = marker;
-        {% endfor %}
-
-        if (coords.length > 0) {
-          map.setCenter(coords[coords.length - 1]);
-          info.open(map, marker);
-        }
-        var path = new google.maps.Polyline({
-          map: map,
-          path: coords,
-          geodesic: true,
-          strokeColor: '#0000FF',
-          strokeOpacity: 1.0,
-          strokeWeight: 2
-        });
+      {% for tuple in list %}
+      function pad_int(x) {
+        return x < 10 ? "0" + x : x;
       }
+      var date = new Date({{tuple.3}} * 1000);
+      var h = pad_int(date.getHours());
+      var m = pad_int(date.getMinutes());
+      var s = pad_int(date.getSeconds());
+      var D = pad_int(date.getDate());
+      var M = pad_int(date.getMonth() + 1);
+      var Y = date.getFullYear();
+
+      var latLng = {lat: {{tuple.0}}, lng: {{tuple.1}}};
+      var marker = new mapboxgl.Marker()
+        .setLngLat(latLng)
+        .setPopup(new mapboxgl.Popup({closeOnClick: false})
+          .setLngLat(latLng)
+          .setText(h + ":" + m + ":" + s + " " + D + "-" + M + "-" + Y)
+          .addTo(map))
+        .addTo(map);
+
+      coords.push([latLng["lng"], latLng["lat"]]);
+      {% endfor %}
+
+      if (coords.length > 0) {
+        map.setCenter(coords[coords.length - 1]);
+        marker.togglePopup();
+      }
+      // Show the polyline.
+      map.on('load', function () {
+        map.addLayer({
+            "id": "route",
+            "type": "line",
+            "source": {
+                "type": "geojson",
+                "data": {
+                    "type": "Feature",
+                    "properties": {},
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": coords
+                    }
+                }
+            },
+            "layout": {
+                "line-join": "round",
+                "line-cap": "round"
+            },
+            "paint": {
+                "line-color": "#00F",
+                "line-width": 2
+            }
+        });
+      });
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ API_KEY }}&callback=initMap"
-  type="text/javascript"></script>
   </body>
 </html>
 {% endautoescape %}

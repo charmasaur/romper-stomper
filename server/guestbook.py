@@ -22,7 +22,7 @@ class CyclePath(ndb.Model):
 
 def get_api_key():
     f = open('api_key.txt', 'r')
-    return f.read()
+    return f.read().strip()
 
 
 class Cycler(webapp2.RequestHandler):
