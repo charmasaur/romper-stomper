@@ -1,6 +1,7 @@
-# Romper stomper
+# Romper
 
-Stomp that romper.
+Simple live tracking / location sharing.
 
-For app engine stuff: https://cloud.google.com/appengine/downloads
-For Gradle: https://gradle.org/gradle-download/
+Available on Google Play Store: https://play.google.com/store/apps/details?id=com.github.charmasaur.romperstomper
+
+If you're developing / contributing, see https://cloud.google.com/appengine/downloads for app engine stuff and https://gradle.org/gradle-download/ for Gradle.
