@@ -176,7 +176,7 @@ public class CycleActivity extends Activity {
   }
 
   private static String getUrl(String token) {
-    return "http://romper-stomper.appspot.com/cycler?token=" + token;
+    return "http://romper-app.herokuapp.com/cycler?token=" + token;
   }
 
   private void updateAll() {
