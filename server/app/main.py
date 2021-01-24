@@ -91,12 +91,12 @@ def cycle_submit():
 @app.route("/remove_expired", methods=['GET'])
 def remove_expired():
     date = datetime.datetime.today()
-    query = CyclePath.query(
-            CyclePath.expiry_date != None,
-            CyclePath.expiry_date < date)
+    query = CyclePath.query.filter(CyclePath.expiry_date < date)
+    count = query.count()
+    query.delete(synchronize_session=False)
+    db.session.commit()
 
-    ndb.delete_multi(query.iter(keys_only=True))
-    self.response.write("Deleted " + str(query.count()) + " entries");
+    return f"Deleted {count} entries"
 
 @app.route("/dump", methods=['GET'])
 def dump():
