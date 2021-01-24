@@ -98,7 +98,8 @@ def remove_expired():
 
     return f"Deleted {count} entries"
 
-@app.route("/dump", methods=['GET'])
-def dump():
-    return "<br>".join([str((path.token, path.point_list, path.expiry_date))
-                     for path in CyclePath.query.all()])
+# Only for debugging (it'd be nice to find a more legit way to do this).
+#@app.route("/dump", methods=['GET'])
+#def dump():
+#    return "<br>".join([str((path.token, path.point_list, path.expiry_date))
+#                     for path in CyclePath.query.all()])
