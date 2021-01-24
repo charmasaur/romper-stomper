@@ -29,8 +29,7 @@ def get_api_key():
 def cycler():
     token = request.args.get('token')
     if not token:
-        self.response.write("You need to provide a token")
-        return
+        return "You need to provide a token"
     native = request.args.get('native')
 
     path = CyclePath.query.filter_by(token=token).first()
@@ -41,14 +40,11 @@ def cycler():
 
     if native:
         if point_list == None:
-            self.response.write("")
-            return
-        self.response.write([[lat, lng, stamp] for (lat, lng, _, stamp) in point_list])
-        return
+            return ""
+        return str([[lat, lng, stamp] for (lat, lng, _, stamp) in point_list])
     else:
         if point_list == None:
-            self.response.write("Don't have any points yet, try again later")
-            return
+            return "Don't have any points yet, try again later"
         return render_template(
             "cycle.html",
             point_list=point_list,
@@ -103,4 +99,5 @@ def remove_expired():
 
 @app.route("/dump", methods=['GET'])
 def dump():
-    return list(CyclePath.query())
+    return "<br>".join([str((path.token, path.point_list, path.expiry_date))
+                     for path in CyclePath.query.all()])
