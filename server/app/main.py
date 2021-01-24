@@ -69,6 +69,7 @@ def cycle_submit():
             token=token,
             expiry_date=datetime.datetime.today() + EXPIRY_TIME,
         )
+        db.session.add(path)
         point_list = []
     else:
         point_list = json.loads(path.point_list)
