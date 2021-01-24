@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 import com.github.charmasaur.romperstomper.R;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.List;
 
 /**
@@ -131,7 +132,7 @@ public final class CycleMapActivity extends FragmentActivity {
 
     url =
       getIntent().getData().buildUpon().appendQueryParameter("native", "true").build().toString();
-    cycleMap.setMarkers(ImmutableList.<CycleMapFetcher.MarkerInfo>of());
+    cycleMap.setMarkers(ImmutableSet.<CycleMapFetcher.MarkerInfo>of());
     refresh();
   }
 
@@ -151,7 +152,7 @@ public final class CycleMapActivity extends FragmentActivity {
   private final CycleMapFetcher.Callback fetcherCallback = new CycleMapFetcher.Callback() {
     @Override
     public void onSuccess(ImmutableList<CycleMapFetcher.MarkerInfo> markers) {
-      cycleMap.setMarkers(markers);
+      cycleMap.setMarkers(ImmutableSet.<CycleMapFetcher.MarkerInfo>copyOf(markers));
       toast("Success");
     }
     @Override

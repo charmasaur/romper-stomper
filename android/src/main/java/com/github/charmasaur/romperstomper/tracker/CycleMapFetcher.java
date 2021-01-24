@@ -9,6 +9,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
@@ -20,14 +21,14 @@ import com.google.gson.JsonArray;
 public class CycleMapFetcher {
   private static final String TAG = CycleMapFetcher.class.getSimpleName();
 
-  public static final class MarkerInfo {
-    public final double lat;
-    public final double lng;
-    public final long timestamp;
-    public MarkerInfo(double lat, double lng, long timestamp) {
-      this.lat = lat;
-      this.lng = lng;
-      this.timestamp = timestamp;
+  @AutoValue
+  public static abstract class MarkerInfo {
+    public abstract double lat();
+    public abstract double lng();
+    public abstract long timestamp();
+
+    public static MarkerInfo create(double lat, double lng, long timestamp) {
+      return new AutoValue_CycleMapFetcher_MarkerInfo(lat, lng, timestamp);
     }
   }
 
@@ -87,7 +88,7 @@ public class CycleMapFetcher {
       JsonArray a = element.getAsJsonArray();
       MarkerInfo newMarker;
       try {
-        newMarker = new MarkerInfo(
+        newMarker = MarkerInfo.create(
             a.get(0).getAsDouble(),
             a.get(1).getAsDouble(),
             a.get(2).getAsLong());

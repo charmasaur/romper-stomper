@@ -2,7 +2,7 @@ package com.github.charmasaur.romperstomper.tracker;
 
 import android.os.Bundle;
 import android.view.View;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Map that can show a collection of locations.
@@ -24,7 +24,7 @@ public interface CycleMap {
   /**
    * Shows the given list of markers.
    */
-  void setMarkers(ImmutableList<CycleMapFetcher.MarkerInfo> markers);
+  void setMarkers(ImmutableSet<CycleMapFetcher.MarkerInfo> markers);
 
   /**
    * Shows the user location.

@@ -17,7 +17,7 @@ import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 
@@ -29,7 +29,7 @@ public final class MapboxCycleMap implements CycleMap {
   private final MapView mapView;
   private final MapboxLocationLayer locationLayer;
 
-  private ImmutableList<CycleMapFetcher.MarkerInfo> markers = ImmutableList.of();
+  private ImmutableSet<CycleMapFetcher.MarkerInfo> markers = ImmutableSet.of();
   private boolean hasSetInitialViewport;
 
   @Nullable private MapboxMap mapboxMap;
@@ -89,7 +89,7 @@ public final class MapboxCycleMap implements CycleMap {
   }
 
   @Override
-  public void setMarkers(ImmutableList<CycleMapFetcher.MarkerInfo> markers) {
+  public void setMarkers(ImmutableSet<CycleMapFetcher.MarkerInfo> markers) {
     if (markers.isEmpty()) {
       hasSetInitialViewport = false;
     }
@@ -113,7 +113,7 @@ public final class MapboxCycleMap implements CycleMap {
       lastMarker = mapboxMap.addMarker(
           new MarkerOptions()
               .position(latLng)
-              .title(formatTimestamp(marker.timestamp)));
+              .title(formatTimestamp(marker.timestamp())));
       if (prev != null) {
         options.add(prev, latLng);
       }
@@ -137,7 +137,7 @@ public final class MapboxCycleMap implements CycleMap {
     Preconditions.checkState(markers.size() > 0);
     if (markers.size() == 1) {
       mapboxMap.moveCamera(
-          CameraUpdateFactory.newLatLngZoom(getMarkerLatLng(markers.get(0)), 18.));
+          CameraUpdateFactory.newLatLngZoom(getMarkerLatLng(markers.iterator().next()), 18.));
       return;
     }
     LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
@@ -169,7 +169,7 @@ public final class MapboxCycleMap implements CycleMap {
   };
 
   private static LatLng getMarkerLatLng(CycleMapFetcher.MarkerInfo marker) {
-    return new LatLng(marker.lat, marker.lng);
+    return new LatLng(marker.lat(), marker.lng());
   }
 
   private static String formatTimestamp(long timestamp) {
