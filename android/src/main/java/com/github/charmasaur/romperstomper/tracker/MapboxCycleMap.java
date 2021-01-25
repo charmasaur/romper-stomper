@@ -18,6 +18,7 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 
@@ -134,17 +135,25 @@ public final class MapboxCycleMap implements CycleMap {
    * {@link #markers} must be non-empty.
    */
   private void setDefaultCameraPosition() {
+    ImmutableList<CycleMapFetcher.MarkerInfo> markers = this.markers;
     Preconditions.checkState(markers.size() > 0);
-    if (markers.size() == 1) {
+
+    ImmutableSet.Builder<LatLng> markerLatLngsBuilder = new ImmutableSet.Builder<>();
+
+    for (CycleMapFetcher.MarkerInfo marker : markers) {
+      markerLatLngsBuilder.add(getMarkerLatLng(marker));
+    }
+    ImmutableSet<LatLng> markerLatLngs = markerLatLngsBuilder.build();
+
+    if (markerLatLngs.size() == 1) {
       mapboxMap.moveCamera(
-          CameraUpdateFactory.newLatLngZoom(getMarkerLatLng(markers.get(0)), 18.));
+          CameraUpdateFactory.newLatLngZoom(markerLatLngs.iterator().next(), 18.));
       return;
     }
-    LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
-    for (CycleMapFetcher.MarkerInfo marker : markers) {
-      boundsBuilder.include(getMarkerLatLng(marker));
-    }
-    mapboxMap.moveCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 100));
+    mapboxMap.moveCamera(
+        CameraUpdateFactory.newLatLngBounds(
+            new LatLngBounds.Builder().includes(markerLatLngs.asList()).build(),
+            100));
   }
 
   @Override
