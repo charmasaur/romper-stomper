@@ -3,4 +3,8 @@
     <string name="application_name">@string/app_name</string>
     <string name="cycle_activity_name">@string/app_name</string>
     <string name="cycle_map_activity_name">Romper Tracker</string>
+    <string name="cycle_service_channel_name">Romping</string>
+    <string name="cycle_service_channel_description">
+        Status notification when you\'re romping.
+    </string>
 </resources>

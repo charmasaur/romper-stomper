@@ -1,10 +1,13 @@
 package com.github.charmasaur.romperstomper;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -37,6 +40,8 @@ public final class CycleService extends Service {
    * startService/stopService to start/stop.
    */
   private static final String QUIT_EXTRA = "quit";
+  private static final String NOTIFICATION_CHANNEL_ID = "cycle_service";
+
   private final List<Runnable> listeners = new ArrayList<>();
   private LocationRequester locationRequester;
   private Sender sender;
@@ -69,6 +74,7 @@ public final class CycleService extends Service {
     Log.i(TAG, "onCreate");
     locationRequester = new LocationRequester(this, locationRequesterCallback);
     sender = new Sender(this);
+    createNotificationChannel();
   }
 
   @Override
@@ -101,7 +107,7 @@ public final class CycleService extends Service {
     }
     token = newToken();
     locationRequester.go();
-    startForeground(1, new NotificationCompat.Builder(this)
+    startForeground(1, new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
         .setContentTitle("Romping")
         .setContentIntent(
             PendingIntent.getActivity(
@@ -122,6 +128,20 @@ public final class CycleService extends Service {
     for (Runnable r : listeners) {
       r.run();
     }
+  }
+
+  private void createNotificationChannel() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+      return;
+    }
+    CharSequence name = getString(R.string.cycle_service_channel_name);
+    String description = getString(R.string.cycle_service_channel_description);
+    int importance = NotificationManager.IMPORTANCE_LOW;
+    NotificationChannel channel = new NotificationChannel(
+        NOTIFICATION_CHANNEL_ID, name, importance);
+    channel.setDescription(description);
+    NotificationManager notificationManager = getSystemService(NotificationManager.class);
+    notificationManager.createNotificationChannel(channel);
   }
 
   private void maybeStop() {
