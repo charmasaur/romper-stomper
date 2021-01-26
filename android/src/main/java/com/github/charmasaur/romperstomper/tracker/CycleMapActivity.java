@@ -4,13 +4,13 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentActivity;
+import androidx.core.content.ContextCompat;
 import com.github.charmasaur.romperstomper.R;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -32,7 +32,7 @@ public final class CycleMapActivity extends FragmentActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    cycleMap = new MapboxCycleMap(getLayoutInflater(), getSupportFragmentManager());
+    cycleMap = new MapboxCycleMap(getLayoutInflater());
     cycleMap.onCreate(savedInstanceState);
     setContentView(cycleMap.getView());
 

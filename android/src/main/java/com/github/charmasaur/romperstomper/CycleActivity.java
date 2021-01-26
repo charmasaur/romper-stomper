@@ -1,6 +1,5 @@
 package com.github.charmasaur.romperstomper;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -9,20 +8,12 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import java.security.SecureRandom;
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-import java.text.SimpleDateFormat;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class CycleActivity extends Activity {
   private static final String TAG = CycleActivity.class.getSimpleName();

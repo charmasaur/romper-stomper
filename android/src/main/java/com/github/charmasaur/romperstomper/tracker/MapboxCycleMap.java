@@ -1,10 +1,9 @@
 package com.github.charmasaur.romperstomper.tracker;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import androidx.annotation.Nullable;
 import com.github.charmasaur.romperstomper.R;
 import com.google.common.base.Preconditions;
 import com.mapbox.mapboxsdk.Mapbox;
@@ -17,6 +16,7 @@ import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.Style;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Calendar;
@@ -35,9 +35,7 @@ public final class MapboxCycleMap implements CycleMap {
 
   @Nullable private MapboxMap mapboxMap;
 
-  public MapboxCycleMap(
-      LayoutInflater layoutInflater,
-      FragmentManager fragmentManager) {
+  public MapboxCycleMap(LayoutInflater layoutInflater) {
     Mapbox.getInstance(
         layoutInflater.getContext(),
         layoutInflater.getContext().getResources().getString(R.string.mapbox_key));
