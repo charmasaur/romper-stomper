@@ -44,7 +44,7 @@ public final class MapboxCycleMap implements CycleMap {
     view = layoutInflater.inflate(R.layout.cycle_map_mapbox, /* root= */ null);
 
     mapView = (MapView) view.findViewById(R.id.mapbox_map);
-    locationLayer = new MapboxLocationLayer(layoutInflater.getContext(), mapView);
+    locationLayer = new MapboxLocationLayer(layoutInflater.getContext());
   }
 
   @Override
@@ -169,11 +169,15 @@ public final class MapboxCycleMap implements CycleMap {
   private final OnMapReadyCallback onMapReadyCallback = new OnMapReadyCallback() {
     @Override
     public void onMapReady(MapboxMap mapboxMap) {
-      MapboxCycleMap.this.mapboxMap = mapboxMap;
+      mapboxMap.setStyle(Style.MAPBOX_STREETS, new Style.OnStyleLoaded() {
+        @Override
+        public void onStyleLoaded(Style style) {
+          MapboxCycleMap.this.mapboxMap = mapboxMap;
+          updateMarkersOnMap();
 
-      updateMarkersOnMap();
-
-      locationLayer.setMapboxMap(mapboxMap);
+          locationLayer.setMapboxMap(mapboxMap);
+        }
+      });
     }
   };
 

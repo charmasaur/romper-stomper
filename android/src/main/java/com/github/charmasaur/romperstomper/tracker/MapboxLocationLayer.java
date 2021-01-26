@@ -1,32 +1,25 @@
 package com.github.charmasaur.romperstomper.tracker;
 
 import android.content.Context;
-import android.location.Location;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import com.google.common.base.Preconditions;
-import com.mapbox.android.core.location.LocationEngine;
-import com.mapbox.android.core.location.LocationEngineListener;
-import com.mapbox.android.core.location.LocationEnginePriority;
-import com.mapbox.android.core.location.LocationEngineProvider;
-import com.mapbox.mapboxsdk.maps.MapView;
+import com.mapbox.android.core.location.LocationEngineRequest;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 
 public final class MapboxLocationLayer {
   private static final String TAG = MapboxLocationLayer.class.getSimpleName();
   private final Context context;
-  private final MapView mapView;
 
   @Nullable private MapboxMap mapboxMap;
   private boolean started;
 
-  @Nullable private LocationEngine locationEngine;
-  @Nullable private LocationLayerPlugin locationLayerPlugin;
+  @Nullable private LocationComponent locationComponent;
 
-  public MapboxLocationLayer(Context context, MapView mapView) {
+  public MapboxLocationLayer(Context context) {
     this.context = Preconditions.checkNotNull(context);
-    this.mapView = Preconditions.checkNotNull(mapView);
   }
 
   /**
@@ -57,7 +50,7 @@ public final class MapboxLocationLayer {
     // Whatever happens we can now clean out the mapboxMap reference.
     mapboxMap = null;
 
-    if (locationEngine == null) {
+    if (locationComponent == null) {
       // We never started, so there's nothing to do.
       return;
     }
@@ -67,14 +60,9 @@ public final class MapboxLocationLayer {
       // We could set started to false here, but who cares now that we're destroyed?
     }
 
-    // At this point we're stopped, but still need to tear down the location engine and layer.
-    // Clear out the location engine because I don't trust the API at all.
-    locationLayerPlugin.setLocationEngine(null);
-    locationLayerPlugin = null;
-
-    locationEngine.removeLocationEngineListener(updateRequester);
-    locationEngine.deactivate();
-    locationEngine = null;
+    // Apparently we don't need to do any teardown of the location component, so just clear out the
+    // # reference.
+    locationComponent = null;
   }
 
   /**
@@ -94,16 +82,14 @@ public final class MapboxLocationLayer {
    */
   private void startUpdates() {
     ensureInitialized();
-    updateRequester.requestLocationUpdatesWhenConnected();
-    locationLayerPlugin.setLocationLayerEnabled(true);
+    locationComponent.setLocationComponentEnabled(true);
   }
 
   /**
    * Must only be called when stopped and initialized.
    */
   private void stopUpdates() {
-    locationLayerPlugin.setLocationLayerEnabled(false);
-    updateRequester.removeLocationUpdatesWhenConnected();
+    locationComponent.setLocationComponentEnabled(false);
   }
 
   /**
@@ -115,60 +101,20 @@ public final class MapboxLocationLayer {
     Preconditions.checkState(started);
     Preconditions.checkNotNull(mapboxMap);
 
-    if (locationEngine != null) {
+    if (locationComponent != null) {
       return;
     }
 
-    locationEngine = new LocationEngineProvider(context).obtainBestLocationEngineAvailable();
-    Log.i(TAG, "Location engine: " + locationEngine);
-    locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-    locationEngine.setFastestInterval(1000);
-    locationEngine.activate();
-    locationEngine.addLocationEngineListener(updateRequester);
-
-    locationLayerPlugin = new LocationLayerPlugin(mapView, mapboxMap, locationEngine);
-  }
-
-  private final RequestUpdatesWhenConnectedLocationEngineListener updateRequester =
-    new RequestUpdatesWhenConnectedLocationEngineListener();
-
-  /**
-   * It appears that calls to {@link LocationEngine#requestLocationUpdates} are no-ops prior to
-   * getting the {@link LocationEngineListener#onConnected} callback. This makes the API kind of
-   * awkward to use. This class provides a little wrapper API that will accept requests and
-   * removals of location updates, and actually send them through to the engine when it connects.
-   */
-  private final class RequestUpdatesWhenConnectedLocationEngineListener
-      implements LocationEngineListener {
-    private boolean wantLocationUpdatesWhenConnected;
-    private boolean connected;
-
-    @Override
-    public void onConnected() {
-      // I really hope this is on the main thread...
-      connected = true;
-      if (wantLocationUpdatesWhenConnected) {
-        locationEngine.requestLocationUpdates();
-      }
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {}
-
-    public void requestLocationUpdatesWhenConnected() {
-      Preconditions.checkState(!wantLocationUpdatesWhenConnected);
-      wantLocationUpdatesWhenConnected = true;
-      if (connected) {
-        locationEngine.requestLocationUpdates();
-      }
-    }
-
-    public void removeLocationUpdatesWhenConnected() {
-      Preconditions.checkState(wantLocationUpdatesWhenConnected);
-      wantLocationUpdatesWhenConnected = false;
-      if (connected) {
-        locationEngine.removeLocationUpdates();
-      }
-    }
+    locationComponent = mapboxMap.getLocationComponent();
+    Log.i(TAG, "Location component: " + locationComponent);
+    locationComponent.activateLocationComponent(
+        LocationComponentActivationOptions.builder(context, mapboxMap.getStyle())
+          .useDefaultLocationEngine(true)
+          .locationEngineRequest(
+            new LocationEngineRequest.Builder(/* interval= */ 1000)
+              .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
+              .setFastestInterval(1000)
+              .build())
+          .build());
   }
 }
