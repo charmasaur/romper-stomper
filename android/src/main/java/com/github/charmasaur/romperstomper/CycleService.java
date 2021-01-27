@@ -97,7 +97,6 @@ public final class CycleService extends Service {
   public void onDestroy() {
     // It's possible somebody else is killing us. That's a bit weird, but we can at least clean up.
     maybeStop();
-    locationRequester.destroy();
     super.onDestroy();
   }
 
