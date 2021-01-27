@@ -41,7 +41,8 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".CycleService">
+            android:name=".CycleService"
+            android:foregroundServiceType="location">
         </service>
     </application>
 
