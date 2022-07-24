@@ -98,6 +98,11 @@ def remove_expired():
 
     return f"Deleted {count} entries"
 
+@app.route('/privacy', methods=['GET'])
+def privacy():
+    return render_template("privacy.html")
+
+
 # Only for debugging (it'd be nice to find a more legit way to do this).
 #@app.route("/dump", methods=['GET'])
 #def dump():
