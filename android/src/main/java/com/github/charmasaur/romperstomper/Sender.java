@@ -13,7 +13,7 @@ import com.android.volley.toolbox.Volley;
 public class Sender {
   private static final String TAG = Sender.class.getSimpleName();
   private static final String SCHEME = "https";
-  private static final String AUTHORITY = "romper-app.herokuapp.com";
+  private static final String AUTHORITY = "romper.onrender.com";
   private static final String CYCLE_PATH = "cycle_submit";
 
   private final RequestQueue queue;

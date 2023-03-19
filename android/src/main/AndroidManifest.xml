@@ -36,7 +36,7 @@
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data
-                    android:host="romper-app.herokuapp.com"
+                    android:host="romper.onrender.com"
                     android:pathPrefix="/cycler"/>
             </intent-filter>
         </activity>
