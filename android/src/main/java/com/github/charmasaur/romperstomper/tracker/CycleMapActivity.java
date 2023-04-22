@@ -93,14 +93,14 @@ public final class CycleMapActivity extends FragmentActivity {
 
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menu_refresh:
-        refresh();
-        return true;
-      case R.id.menu_location:
-        myLocation.request(!myLocation.isShowing());
-        invalidateOptionsMenu();
-        return true;
+    if (item.getItemId() == R.id.menu_refresh) {
+      refresh();
+      return true;
+    }
+    if (item.getItemId() == R.id.menu_location) {
+      myLocation.request(!myLocation.isShowing());
+      invalidateOptionsMenu();
+      return true;
     }
     return super.onOptionsItemSelected(item);
   }

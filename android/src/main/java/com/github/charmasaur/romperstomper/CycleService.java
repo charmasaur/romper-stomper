@@ -56,6 +56,7 @@ public final class CycleService extends Service {
       new String[] {
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_NETWORK_STATE,
+        Manifest.permission.POST_NOTIFICATIONS,
         Manifest.permission.INTERNET};
 
   public interface Binder {
@@ -113,7 +114,7 @@ public final class CycleService extends Service {
                 this,
                 0,
                 new Intent(this, CycleActivity.class),
-                PendingIntent.FLAG_UPDATE_CURRENT))
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
         .setSmallIcon(android.R.drawable.ic_menu_mylocation)
         .addAction(
             android.R.drawable.ic_menu_close_clear_cancel,
@@ -122,7 +123,7 @@ public final class CycleService extends Service {
               this,
               1,
               new Intent(this, CycleService.class).putExtra(QUIT_EXTRA, true),
-              PendingIntent.FLAG_UPDATE_CURRENT))
+              PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
         .build());
     for (Runnable r : listeners) {
       r.run();

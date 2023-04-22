@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.github.charmasaur.romperstomper">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
     android:label="@string/application_name"
@@ -17,7 +17,8 @@
 
         <activity
             android:name=".CycleActivity"
-            android:label="@string/cycle_activity_name">
+            android:label="@string/cycle_activity_name"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -28,8 +29,9 @@
             android:name=".tracker.CycleMapActivity"
             android:label="@string/cycle_map_activity_name"
             android:launchMode="standard"
-            android:documentLaunchMode="intoExisting">
-            <intent-filter>
+            android:documentLaunchMode="intoExisting"
+            android:exported="true">
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
