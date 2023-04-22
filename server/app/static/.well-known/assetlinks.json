@@ -1,0 +1,14 @@
+[{ 
+    "relation": ["delegate_permission/common.handle_all_urls"],  
+    "target": {    
+        "namespace": "android_app",   
+        "package_name": "com.github.charmasaur.romperstomper",
+        "sha256_cert_fingerprints":    ["91:A0:D5:5D:88:22:61:5A:61:2E:87:76:5F:BA:1F:D1:A5:A3:C0:A2:43:6D:DC:29:41:E5:31:AF:68:8C:72:A6"]
+    },
+    "relation": ["delegate_permission/common.handle_all_urls"],  
+    "target": {    
+        "namespace": "android_app",   
+        "package_name": "com.github.charmasaur.romperstomper.debug",
+        "sha256_cert_fingerprints":    ["26:CF:27:4A:7D:14:56:8B:7E:F0:52:24:EB:B2:F6:AC:11:9D:7B:76:30:26:7E:3A:59:52:59:F8:42:5B:2D:F7"]
+    }
+}]
