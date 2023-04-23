@@ -1,1 +1,3 @@
-GOOGLE_MAPS_API_KEY=<API key>
+MAPBOX_API_KEY=<API key>
+MAPBOX_DOWNLOADS_TOKEN=<API key>
+android.useAndroidX=true
