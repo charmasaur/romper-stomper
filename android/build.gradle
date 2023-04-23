@@ -57,6 +57,8 @@ android {
       applicationIdSuffix "${suffix}"
       versionNameSuffix "${suffix}"
 
+      zipAlignEnabled true
+
       //minifyEnabled true
       //proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
