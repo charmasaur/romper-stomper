@@ -167,7 +167,7 @@ public class CycleActivity extends Activity {
   }
 
   private static String getUrl(String token) {
-    return "https://romper.onrender.com/cycler?token=" + token;
+    return "https://romper.charmasaur.com/cycler?token=" + token;
   }
 
   private void updateAll() {
