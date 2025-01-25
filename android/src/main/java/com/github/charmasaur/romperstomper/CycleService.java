@@ -7,12 +7,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Base64;
 import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.util.Date;
@@ -107,24 +109,28 @@ public final class CycleService extends Service {
     }
     token = newToken();
     locationRequester.go();
-    startForeground(1, new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-        .setContentTitle("Romping")
-        .setContentIntent(
-            PendingIntent.getActivity(
-                this,
-                0,
-                new Intent(this, CycleActivity.class),
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
-        .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-        .addAction(
-            android.R.drawable.ic_menu_close_clear_cancel,
-            "Stop",
-            PendingIntent.getService(
-              this,
-              1,
-              new Intent(this, CycleService.class).putExtra(QUIT_EXTRA, true),
-              PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
-        .build());
+    ServiceCompat.startForeground(
+        this,
+        /* id=*/ 1,
+        new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setContentTitle("Romping")
+            .setContentIntent(
+                PendingIntent.getActivity(
+                    this,
+                    0,
+                    new Intent(this, CycleActivity.class),
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                "Stop",
+                PendingIntent.getService(
+                  this,
+                  1,
+                  new Intent(this, CycleService.class).putExtra(QUIT_EXTRA, true),
+                  PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
+            .build(),
+         ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
     for (Runnable r : listeners) {
       r.run();
     }
@@ -150,7 +156,7 @@ public final class CycleService extends Service {
     }
     token = null;
     locationRequester.stop();
-    stopForeground(true);
+    ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
     stopSelf();
     for (Runnable r : listeners) {
       r.run();
@@ -172,7 +178,7 @@ public final class CycleService extends Service {
   private final class BinderImpl extends android.os.Binder implements Binder {
     @Override
     public void start() {
-      startService(new Intent(CycleService.this, CycleService.class));
+      startForegroundService(new Intent(CycleService.this, CycleService.class));
     }
 
     @Override
