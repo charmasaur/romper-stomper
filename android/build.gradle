@@ -32,8 +32,8 @@ android {
     applicationId "${rootAppId}"
     minSdkVersion 15
     targetSdkVersion 36
-    versionCode 229
-    versionName "2.2.9"
+    versionCode 230
+    versionName "2.3.0"
     resValue "string", "mapbox_key", (project.findProperty("MAPBOX_API_KEY") ?: "")
   }
   namespace "${rootAppId}"
