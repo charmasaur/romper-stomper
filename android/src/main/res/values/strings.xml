@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="cycle_service_channel_name">Romping</string>
-    <string name="cycle_service_channel_description">
-        Status notification when you\'re romping.
+    <string name="cycle_service_channel_description">Status notification when you\'re romping.</string>
+    <string name="permission_education">
+        Romper needs location permission to track your progress. Romper will only track your location if you\'re actively romping. You can also enable notification permission to show a notification to remind you when you\'re romping.
+    </string>
+    <string name="permission_education_yes">
+        OK
+    </string>
+    <string name="permission_education_no">
+        Cancel
     </string>
 </resources>

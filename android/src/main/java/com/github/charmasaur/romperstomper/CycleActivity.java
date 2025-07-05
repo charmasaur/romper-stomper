@@ -1,7 +1,10 @@
 package com.github.charmasaur.romperstomper;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -10,27 +13,30 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup.MarginLayoutParams;
 import android.widget.Button;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.ViewGroupCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.DialogFragment;
 
-public class CycleActivity extends Activity {
+public class CycleActivity extends FragmentActivity {
   private static final String TAG = CycleActivity.class.getSimpleName();
-  private static final int PERMISSION_CODE = 1338;
 
+  private int permissionCode = 0;
   private Button button;
   private Button stopButton;
   private Button shareButton;
   private Button showButton;
   private boolean havePermissions;
 
-  // Valid iff serviceBinder is non-null.
   @Nullable private String token;
   private boolean started;
-
-  @Nullable
-  private CycleService.Binder serviceBinder;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -44,17 +50,27 @@ public class CycleActivity extends Activity {
     shareButton = (Button) findViewById(R.id.share_button);
     showButton = (Button) findViewById(R.id.show_button);
 
+    View rootView = findViewById(R.id.main);
+    ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, windowInsets) -> {
+      Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+      MarginLayoutParams mlp = (MarginLayoutParams) v.getLayoutParams();
+      mlp.topMargin = insets.top;
+      mlp.bottomMargin = insets.bottom;
+      v.setLayoutParams(mlp);
+
+      return WindowInsetsCompat.CONSUMED;
+    });
+
     button.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        if (serviceBinder == null) {
-          throw new RuntimeException("Start button clicked when not bound");
-        } else if (!havePermissions) {
-          getPermissions();
+        if (!havePermissions) {
+          showPermissionsEducation();
         } else if (started) {
           throw new RuntimeException("Start button clicked when started");
         } else {
-          serviceBinder.start();
+          startForegroundService(new Intent(CycleActivity.this, CycleService.class));
         }
       }
     });
@@ -62,12 +78,10 @@ public class CycleActivity extends Activity {
     stopButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        if (serviceBinder == null) {
-          throw new RuntimeException("Stop button clicked when not bound");
-        } else if (!started) {
+        if (!started) {
           throw new RuntimeException("Stop button clicked when not started");
         } else {
-          serviceBinder.stop();
+          stopService(new Intent(CycleActivity.this, CycleService.class));
         }
       }
     });
@@ -75,9 +89,7 @@ public class CycleActivity extends Activity {
     shareButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        if (serviceBinder == null) {
-          throw new RuntimeException("Share button clicked when not bound");
-        } else if (!started) {
+        if (!started) {
           throw new RuntimeException("Share button clicked when not started");
         }
         startActivity(Intent.createChooser(getShareIntent(token), "Share via..."));
@@ -87,9 +99,7 @@ public class CycleActivity extends Activity {
     showButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        if (serviceBinder == null) {
-          throw new RuntimeException("Show button clicked when not bound");
-        } else if (!started) {
+        if (!started) {
           throw new RuntimeException("Show button clicked when not started");
         }
         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getUrl(token))));
@@ -97,22 +107,14 @@ public class CycleActivity extends Activity {
     });
 
     havePermissions = checkThePermissions();
-    if (!havePermissions) {
-      getPermissions();
-    }
-    updateAll();
 
-    if (!bindService(new Intent(this, CycleService.class), connection, BIND_AUTO_CREATE)) {
-      throw new RuntimeException("Failed to bind to service");
-    }
+    CycleService.Broker.INSTANCE.addListener(binderListener);
+    binderListener.run();
   }
 
   @Override
   public void onDestroy() {
-    if (serviceBinder != null) {
-      serviceBinder.removeListener(binderListener);
-    }
-    unbindService(connection);
+    CycleService.Broker.INSTANCE.removeListener(binderListener);
     super.onDestroy();
   }
 
@@ -123,8 +125,13 @@ public class CycleActivity extends Activity {
     updateAll();
   }
 
+  private void showPermissionsEducation() {
+    new PermissionEducationDialogFragment().show(
+        getSupportFragmentManager(), "PERMISSION_EDUCATION_DIALOG");
+  }
+
   private void getPermissions() {
-    ActivityCompat.requestPermissions(this, CycleService.REQUIRED_PERMISSIONS, PERMISSION_CODE);
+    ActivityCompat.requestPermissions(this, CycleService.DESIRED_PERMISSIONS, permissionCode++);
   }
 
   private boolean checkThePermissions() {
@@ -136,23 +143,13 @@ public class CycleActivity extends Activity {
     return true;
   }
 
-  private void updateButtonText() {
-    if (serviceBinder == null) {
-      button.setText("Loading...");
-    } else if (!havePermissions) {
-      button.setText("Waiting for permissions...");
-    } else {
-      button.setText("Start");
-    }
-  }
-
   private void updateButtonEnabled() {
-    button.setEnabled(serviceBinder != null && !started);
-    stopButton.setEnabled(serviceBinder != null && started);
+    button.setEnabled(!started);
+    stopButton.setEnabled(started);
   }
 
   private void updateShareButtonEnabled() {
-    boolean enabled = serviceBinder != null && started;
+    boolean enabled = started;
     shareButton.setEnabled(enabled);
     showButton.setEnabled(enabled);
   }
@@ -171,7 +168,6 @@ public class CycleActivity extends Activity {
   }
 
   private void updateAll() {
-    updateButtonText();
     updateButtonEnabled();
     updateShareButtonEnabled();
   }
@@ -179,27 +175,23 @@ public class CycleActivity extends Activity {
   private final Runnable binderListener = new Runnable() {
     @Override
     public void run() {
-      started = serviceBinder.isStarted();
-      token = serviceBinder.getToken();
+      started = CycleService.Broker.INSTANCE.isStarted();
+      token = CycleService.Broker.INSTANCE.getToken();
       updateAll();
     }
   };
 
-  private final ServiceConnection connection = new ServiceConnection() {
+  public static final class PermissionEducationDialogFragment extends DialogFragment {
     @Override
-    public void onServiceConnected(ComponentName className, IBinder binder) {
-      Log.i(TAG, "onServiceConnected");
-      serviceBinder = (CycleService.Binder) binder;
-      serviceBinder.addListener(binderListener);
-      binderListener.run();
-      updateAll();
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+      AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+      builder.setMessage(R.string.permission_education)
+        .setPositiveButton(
+            R.string.permission_education_yes,
+            (dialog, id) -> ((CycleActivity) getActivity()).getPermissions())
+      .setNegativeButton(
+          R.string.permission_education_no, (dialog, id) -> {});
+      return builder.create();
     }
-
-    @Override
-    public void onServiceDisconnected(ComponentName className) {
-      Log.i(TAG, "onServiceDisconnected");
-      serviceBinder = null;
-      updateAll();
-    }
-  };
+  }
 }
